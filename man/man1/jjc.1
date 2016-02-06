@@ -7,7 +7,7 @@ jjc \- John's (Mini-)Java Compiler
 [\fB\-h\fR|\fB\-b\fR|\fB\-V\fR]
 .TP
 .B jjc
-\fIFILE\fR
+\fIFILE\fR...
 .SH DESCRIPTION
 John's (Mini-)Java Compiler
 .SH OPTIONS
@@ -15,10 +15,16 @@ John's (Mini-)Java Compiler
 .BR \-h ", " \-\-help
 Print a brief help message, and then exit.
 .TP
+.BR \-b ", " \-\-brief
+Print as little information about the compilation of the input \fIFILE\fRs as
+possible.
+.TP
 .BR \-V ", " \-\-verbose
-Print verbose information about the compilation of the input \fIFILE\fR\.
-.SH BUGS
+Print verbose information about the compilation of the input \fIFILE\fRs\.
 .SH NOTES
+\fBjjc\fR only supports a subset of the standard java programming language.
+For more information on the format of these programs, please see some of the
+samples and tests that come with \fBjjc\fR\'s source distribution.
 .SH AUTHORS
 .TP
 Written by John C. Matty <jcmjohnmatty@me.com>
