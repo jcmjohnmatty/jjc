@@ -1,5 +1,5 @@
-%option header-file="lex.yy.h"
-%option outfile="lex.yy.c"
+%option header-file="lexer.h"
+%option outfile="lexer.c"
 %option noyywrap
 
 %{

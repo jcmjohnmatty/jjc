@@ -21,3 +21,4 @@ Makefile
 aclocal.m4
 ylwrap
 lexer.c
+lexer.h
