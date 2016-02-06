@@ -7,6 +7,7 @@ Makefile.in
 .deps
 *.Po
 *.o
+*.dSYM
 aclocal.m4
 autom4te.cache
 compile
@@ -18,3 +19,5 @@ depcomp
 stamp-h1
 Makefile
 aclocal.m4
+ylwrap
+lexer.c

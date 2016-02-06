@@ -1,8 +1,10 @@
 %option header-file="lex.yy.h"
+%option outfile="lex.yy.c"
+%option noyywrap
 
 %{
 #include <stdlib.h>
-#include <jjc/token.h>
+#include <tokens.h>
 
 extern int yycolumn, yylength, yyline, yylval;
 %}
@@ -17,7 +19,7 @@ NEWLINE       [\n]
 %%
 {NEWLINE}           {yyline++; yycolumn=0;}
 \&\&                { return ANDnum; }
-\:\=                { return ASSIGNnum; }
+\:\=                { return ASSGNnum; }
 declarations        { return DECLARATIONnum; }
 "."                 { return DOTnum; }
 enddeclarations     { return ENDDECLARATIONnum; }

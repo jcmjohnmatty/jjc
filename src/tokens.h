@@ -1,8 +1,8 @@
 #define ANDnum                257
 #define ASSGNnum              258
-#define DECLARATIONSnum       259
+#define DECLARATIONnum       259
 #define DOTnum                260
-#define ENDDECLARATIONSnum    261
+#define ENDDECLARATIONnum    261
 #define EQUALnum              262
 #define GTnum                 263
 #define IDnum                 264

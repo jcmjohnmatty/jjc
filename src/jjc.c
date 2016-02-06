@@ -1,8 +1,10 @@
 #include <lex.yy.h>
 
+#include <tokens.h>
+
 int
 main (int argc, char* argv[]) {
-  while (true)
+  while (1)
 	{
 	  int token = yylex ();
 	  printf ("%s\n", yytext);
@@ -14,13 +16,13 @@ main (int argc, char* argv[]) {
 		case ASSGNnum:
 		  break;
 
-		case DECLARATIONSnum:
+		case DECLARATIONnum:
 		  break;
 
 		case DOTnum:
 		  break;
 
-		case ENDDECLARATIONSnum:
+		case ENDDECLARATIONnum:
 		  break;
 
 		case EQUALnum:
