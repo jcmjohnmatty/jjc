@@ -7,7 +7,7 @@
 #include <string.h>
 #include <tokens.h>
 
-extern int yycolumn, yylength, yyline, yylval;
+extern int yycolumn, yyline;
 %}
 
 DIGIT         [0-9]
@@ -80,5 +80,5 @@ void               { return VOIDnum; }
 <<EOF>>            { return EOFnum; }
 %%
 
-int yyline = 0;
+int yyline = 1;
 int yycolumn = 0;

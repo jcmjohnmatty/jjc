@@ -3,6 +3,9 @@
 
 #include <lexer.h>
 
+extern int yyline;
+extern int yycolumn;
+
 #include <symtbl.h>
 #include <tokens.h>
 
@@ -10,10 +13,10 @@ static int verbose_flag = -1;
 
 static struct option long_options[] =
   {
-	{"verbose", no_argument, 0, 'V'},
-	{"brief",   no_argument, 0, 'b'},
-	{"help",    no_argument, 0, 'h'},
-	{0, 0, 0, 0}
+    {"verbose", no_argument, 0, 'V'},
+    {"brief",   no_argument, 0, 'b'},
+    {"help",    no_argument, 0, 'h'},
+    {0, 0, 0, 0}
   };
 
 int
@@ -35,24 +38,24 @@ main (int argc, char* argv[]) {
 
       switch (c)
         {
-		case 'V':
-		  if (verbose_flag == 0)
-			{
-			  /* ERROR */
-			}
-		  verbose_flag = 1;
-		  break;
+        case 'V':
+          if (verbose_flag == 0)
+            {
+              /* ERROR */
+            }
+          verbose_flag = 1;
+          break;
 
-		case 'b':
-		  if (verbose_flag == 1)
-			{
-			  /* ERROR */
-			}
-		  break;
+        case 'b':
+          if (verbose_flag == 1)
+            {
+              /* ERROR */
+            }
+          break;
 
-		case 'h':
-		  exit (0);
-		  break;
+        case 'h':
+          exit (0);
+          break;
 
         case '?':
           break;
@@ -64,177 +67,235 @@ main (int argc, char* argv[]) {
 
   /* Print any remaining command line arguments (not options). */
   if (optind < argc)
-	{
-	  while (optind < argc)
-		{
-		  /* Specify the input file. */
-		  FILE *infile = fopen (argv[optind], "r");
-		  ++optind;
+    {
+      while (optind < argc)
+        {
+          /* Specify the input file. */
+          FILE *infile = fopen (argv[optind], "r");
+		  printf ("The output of our lexer for file `%s'\n", argv[optind]);
+          ++optind;
 
-		  if (!infile)
-			{
-			  /* ERROR */
-			}
-		  yyin = infile;
+          if (!infile)
+            {
+              /* ERROR */
+            }
+          yyin = infile;
 
-		  /* Recongnize the tokens. */
-		  symtbl* symtbl = malloc (sizeof (symtbl));
-		  int symcnt = 0;
-		  while (1)
-			{
-			  int hit_eof = 0;
-			  int token = yylex ();
+#define PRINT_STBL_ROWS(l, c, t, i)     \
+          printf("%-19s",   (l));       \
+          printf("%-19s",   (c));       \
+          printf("%-19s",   (t));       \
+          printf("%-19s\n", (i));
 
-			  switch (token)
-				{
-				case ANDnum:
-				  break;
+#define PRINT_STBL_ROWIN(l, c, t)       \
+          printf("\r%-19d",   (l));       \
+          printf("%-19d",   (c));       \
+          printf("%-19s\n",   (t));
 
-				case ASSGNnum:
-				  break;
+#define PRINT_STBL_ROWIY(l, c, t, i)    \
+          printf("\r%-19d",   (l));       \
+          printf("%-19d",   (c));       \
+          printf("%-19s",   (t));       \
+          printf("%-19d\n", (i));
 
-				case DECLARATIONnum:
-				  break;
+          /* Recongnize the tokens. */
+          symtbl* symtbl = symtbl_new ();
+          int symcnt = 0;
+          int hit_eof = 0;
+          int token = -1;
+		  PRINT_STBL_ROWS("Line", "Column", "Token", "Index in String table")
+          while (1)
+            {
+              token = yylex ();
 
-				case DOTnum:
-				  break;
+              switch (token)
+                {
+                case ANDnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "ANDnum")
+                  break;
 
-				case ENDDECLARATIONnum:
-				  break;
+                case ASSGNnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "ASSGNnum")
+                  break;
 
-				case EQUALnum:
-				  break;
+                case DECLARATIONnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "DECLARATIONnum")
+                  break;
 
-				case GTnum:
-				  break;
+                case DOTnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "DOTnum")
+                  break;
 
-				case IDnum:
-				  if (!symtbl_contains_value (symtbl, yytext))
-					{
-					  symtbl_put (symtbl, symcnt, yytext);
-					}
-				  printf ("%s ", yytext);
-				  break;
+                case ENDDECLARATIONnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "ENDDECLARATIONnum")
+                  break;
 
-				case INTnum:
-				  break;
+                case EQUALnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "EQUALnum")
+                  break;
 
-				case LBRACnum:
-				  break;
+                case GTnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "GTnum")
+                  break;
 
-				case LPARENnum:
-				  break;
+                case IDnum:
+                  if (!symtbl_contains_value (symtbl, yytext))
+                    {
+                      symtbl_put (symtbl, symcnt, yytext);
+                    }
+				  PRINT_STBL_ROWIY(yyline, yycolumn, "IDnum", symcnt)
+                  break;
 
-				case METHODnum:
-				  break;
+                case INTnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "INDnum")
+                  break;
 
-				case NEnum:
-				  break;
+                case LBRACnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "LBRACnum")
+                  break;
 
-				case ORnum:
-				  break;
+                case LPARENnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "LPARENnum")
+                  break;
 
-				case PROGRAMnum:
-				  break;
+                case METHODnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "METHODnum")
+                  break;
 
-				case RBRACnum:
-				  break;
+                case NEnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "NEnum")
+                  break;
 
-				case RPARENnum:
-				  break;
+                case ORnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "ORnum")
+                  break;
 
-				case SEMInum:
-				  break;
+                case PROGRAMnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "PROGRAMnum")
+                  break;
 
-				case VALnum:
-				  break;
+                case RBRACnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "RBRACnum")
+                  break;
 
-				case WHILEnum:
-				  break;
+                case RPARENnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "RPARENnum")
+                  break;
 
-				case CLASSnum:
-				  break;
+                case SEMInum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "SEMInum")
+                  break;
 
-				case COMMAnum:
-				  break;
+                case VALnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "VALnum")
+                  break;
 
-				case DIVIDEnum:
-				  break;
+                case WHILEnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "WHILEnum")
+                  break;
 
-				case ELSEnum:
-				  break;
+                case CLASSnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "CLASSnum")
+                  break;
 
-				case EQnum:
-				  break;
+                case COMMAnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "COMMAnum")
+                  break;
 
-				case GEnum:
-				  break;
+                case DIVIDEnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "DIVIDEnum")
+                  break;
 
-				case ICONSTnum:
-				  if (!symtbl_contains_value (symtbl, yytext))
-					{
-					  symtbl_put (symtbl, symcnt, yytext);
-					}
-				  printf ("%s ", yytext);
-				  break;
+                case ELSEnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "ELSEnum")
+                  break;
 
-				case IFnum:
-				  break;
+                case EQnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "EQnum")
+                  break;
 
-				case LBRACEnum:
-				  break;
+                case GEnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "GEnum")
+                  break;
 
-				case LEnum:
-				  break;
+                case ICONSTnum:
+                  if (!symtbl_contains_value (symtbl, yytext))
+                    {
+                      symtbl_put (symtbl, symcnt, yytext);
+                    }
+				  PRINT_STBL_ROWIY(yyline, yycolumn, "ICONSTnum", symcnt)
+                  break;
 
-				case LTnum:
-				  break;
+                case IFnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "IFnum")
+                  break;
 
-				case MINUSnum:
-				  break;
+                case LBRACEnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "LBRACEnum")
+                  break;
 
-				case NOTnum:
-				  break;
+                case LEnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "LEnum")
+                  break;
 
-				case PLUSnum:
-				  break;
+                case LTnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "LTnum")
+                  break;
 
-				case RBRACEnum:
-				  break;
+                case MINUSnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "MINUSnum")
+                  break;
 
-				case RETURNnum:
-				  break;
+                case NOTnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "NOTnum")
+                  break;
 
-				case SCONSTnum:
-				  if (!symtbl_contains_value (symtbl, yytext))
-					{
-					  symtbl_put (symtbl, symcnt, yytext);
-					}
-				  printf ("%s ", yytext);
-				  break;
+                case PLUSnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "PLUSnum")
+                  break;
 
-				case TIMESnum:
-				  break;
+                case RBRACEnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "RBRACEnum")
+                  break;
 
-				case VOIDnum:
-				  break;
+                case RETURNnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "RETURNnum")
+                  break;
 
-				case EOFnum:
-				  hit_eof = 1;
-				  break;
-				}
+                case SCONSTnum:
+                  if (!symtbl_contains_value (symtbl, yytext))
+                    {
+                      symtbl_put (symtbl, symcnt, yytext);
+                    }
+				  PRINT_STBL_ROWIY(yyline, yycolumn, "SCONSTnum", symcnt)
+                  break;
 
-			  if (hit_eof == 1)
-				{
-				  printf ("\nEnd of file\n");
-				  break;
-				}
-			  else
-				{
-				  /* ERROR */
-				}
-			}
-		  free (symtbl);
-		}
-	}
+                case TIMESnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "TIMESnum")
+                  break;
+
+                case VOIDnum:
+				  PRINT_STBL_ROWIN(yyline, yycolumn, "VOIDnum")
+                  break;
+
+                case EOFnum:
+				  PRINT_STBL_ROWS("", "", "EOFnum", "")
+                  hit_eof = 1;
+                  break;
+                }
+
+              if (hit_eof == 1)
+                {
+                  printf ("\nEnd of file\n");
+                  break;
+                }
+              else
+                {
+                  /* ERROR */
+                }
+              ++symcnt;
+            }
+          symtbl_delete (symtbl);
+        }
+    }
 }
