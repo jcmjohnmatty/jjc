@@ -1,0 +1,12 @@
+2016-02-06	John C. Matty	<jcmjohnmatty@me.com>
+	* .gitignore: Ignore all generated files.
+	* configure.ac: Building for initial lexer.
+	* Makefile.am: Makefiles for building initial lexer/jjc implementation.
+	* jjc.1: Added initial documentation.
+	* jjc.c: Implemented jjc driver program.
+	* lexer.l: Implemented initial lexer.
+	* tokens.h: Added defines for token types.
+
+Copyright 2016 John C. Matty.
+Copying and distribution of this file, with or without modification, are
+permitted provided the copyright notice and this notice are preserved.
