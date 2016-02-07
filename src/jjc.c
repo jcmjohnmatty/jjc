@@ -81,7 +81,7 @@ main (int argc, char* argv[]) {
 			{
 			  int hit_eof = 0;
 			  int token = yylex ();
-			  printf ("%s\n", yytext);
+
 			  switch (token)
 				{
 				case ANDnum:
@@ -106,9 +106,11 @@ main (int argc, char* argv[]) {
 				  break;
 
 				case IDnum:
+				  printf ("%s ", yytext);
 				  break;
 
 				case INTnum:
+				  printf ("%s ", yytext);
 				  break;
 
 				case LBRACnum:
@@ -193,6 +195,7 @@ main (int argc, char* argv[]) {
 				  break;
 
 				case SCONSTnum:
+				  printf ("%s ", yytext);
 				  break;
 
 				case TIMESnum:
@@ -208,6 +211,7 @@ main (int argc, char* argv[]) {
 
 			  if (hit_eof == 1)
 				{
+				  printf ("\nEnd of file\n");
 				  break;
 				}
 			  else

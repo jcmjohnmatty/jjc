@@ -1,3 +1,6 @@
+#ifndef __JJC_TOKENS_H_
+#define __JJC_TOKENS_H_
+
 #define ANDnum                257
 #define ASSGNnum              258
 #define DECLARATIONnum       259
@@ -38,3 +41,5 @@
 #define TIMESnum              294
 #define VOIDnum               295
 #define EOFnum                0
+
+#endif /* __JJC_TOKENS_H_ */
