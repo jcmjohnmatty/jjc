@@ -57,4 +57,10 @@ strtbl_contains_value (strtbl* stbl, char* string);
 void
 strtbl_print (strtbl* stbl);
 
+/**
+ * @brief Global symbol table.
+ * @todo Is this bad?
+ */
+extern struct strtbl* string_table;
+
 #endif /* __STRTBL_H_ */

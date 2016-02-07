@@ -4,6 +4,8 @@
 
 #include <strtbl.h>
 
+struct strtbl* string_table;
+
 strtbl*
 strtbl_new (void)
 {
