@@ -50,4 +50,11 @@ strtbl_put (strtbl* stbl, char* string);
 int
 strtbl_contains_value (strtbl* stbl, char* string);
 
+/**
+ * @brief Print this string table.
+ * @param stbl The string table to print.
+ */
+void
+strtbl_print (strtbl* stbl);
+
 #endif /* __STRTBL_H_ */

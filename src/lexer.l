@@ -3,11 +3,13 @@
 %option noyywrap
 
 %{
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include <tokens.h>
 
 extern int yycolumn, yyline;
+
 %}
 
 DIGIT         [0-9]
@@ -76,7 +78,14 @@ return             { return RETURNnum; }
 void               { return VOIDnum; }
 
 {DIGIT}+           { return ICONSTnum; }
-{ID}               { return IDnum; }
+{ID}               {
+  int i;
+  for (i = 0; i < strlen (yytext); ++i)
+    {
+      yytext[i] = tolower(yytext[i]);
+    }
+  return IDnum;
+}
 <<EOF>>            { return EOFnum; }
 %%
 

@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -115,4 +116,17 @@ strtbl_contains_value (strtbl* stbl, char* string)
 	  ++start;
 	}
   return 0;
+}
+
+void
+strtbl_print (strtbl* stbl)
+{
+  int i;
+  /* Skip the trailing space... */
+  for (i = 0; i < stbl->buffer_length - 1; ++i)
+	{
+	  printf ("%c", stbl->buffer[i]);
+	}
+  /* Finish with newline... */
+  printf ("\n");
 }

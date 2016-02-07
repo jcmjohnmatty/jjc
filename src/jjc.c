@@ -103,7 +103,7 @@ main (int argc, char* argv[]) {
           int idx = -1;
           int hit_eof = 0;
           int token = -1;
-          PRINT_STBL_ROWS("Line", "Column", "Token", "Index in String table")
+          PRINT_STBL_ROWS("Line", "Column", "Token", "Index_in_String_Table")
           while (1)
             {
               token = yylex ();
@@ -286,7 +286,9 @@ main (int argc, char* argv[]) {
 
               if (hit_eof == 1)
                 {
-                  printf ("\nEnd of file\n");
+				  printf ("\nString Table : ");
+				  strtbl_print (stbl);
+                  printf ("End of file\n");
                   break;
                 }
               else
