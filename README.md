@@ -2,12 +2,15 @@
 A (Mini-)Java Compiler implementation.
 
 ## Prerequisites
-To build jjc, autoconf and automake are required.  These can usually be
+To build `jjc`, autoconf and automake are required.  These can usually be
 installed through your system's package manager.
 
+`flex` is also required, as it is used to implement `jjc`'s lexer.
+
 ## Building
-There are two parts that must be done in order to build jjc, configuring the
-project using autotools, and compiling/installing jjc after this has been done.
+There are two parts that must be done in order to build `jjc`, configuring the
+project using autotools, and compiling/installing `jjc` after this has been
+done.
 
 ### Autotools configuration
 The first step is to configure the initial build system using autotools.  To do
