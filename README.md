@@ -23,3 +23,14 @@ this, run:
 This can also be done using autotools/make:
 
     # make install
+
+## Testing
+The above steps build the executable `jjc`.  To test it, various Mini-Java
+sources have been provided in the `test` directory, which `jjc` can compile.
+
+### Using jjc
+The basic usage of `jjc` is to supply a single Mini-Java source file to it.
+For more information on the usage and infocation of `jjc`, see either the
+man-page under `man/man`, or run
+
+    $ jjc --help
