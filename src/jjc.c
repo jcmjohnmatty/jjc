@@ -79,6 +79,7 @@ main (int argc, char* argv[]) {
 		  /* Recongnize the tokens. */
 		  while (1)
 			{
+			  int hit_eof = 0;
 			  int token = yylex ();
 			  printf ("%s\n", yytext);
 			  switch (token)
@@ -201,7 +202,17 @@ main (int argc, char* argv[]) {
 				  break;
 
 				case EOFnum:
+				  hit_eof = 1;
 				  break;
+				}
+
+			  if (hit_eof == 1)
+				{
+				  break;
+				}
+			  else
+				{
+				  /* ERROR */
 				}
 			}
 		}

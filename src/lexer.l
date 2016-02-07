@@ -55,9 +55,9 @@ return              { return RETURNnum; }
 void                { return VOIDnum; }
 
 {DIGIT}+            { return ICONSTnum; }
-"\""[^\n]*"\""          { return SCONSTnum; }
+"\""[^\n]*"\""      { return SCONSTnum; }
 {ID}                { return IDnum; }
-
+<<EOF>>             { return EOFnum; }
 %%
 
 int yyline = 0;
