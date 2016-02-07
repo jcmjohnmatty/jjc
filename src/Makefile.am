@@ -4,4 +4,4 @@ lexer.h: lexer.l
 	flex lexer.l
 
 bin_PROGRAMS = jjc
-jjc_SOURCES = jjc.c symtbl.c lexer.l uba.c
+jjc_SOURCES = jjc.c strtbl.c lexer.l uba.c

@@ -41,4 +41,13 @@ strtbl_delete (strtbl* stbl);
 int
 strtbl_put (strtbl* stbl, char* string);
 
+/**
+ * @brief Check if a string table contains a string.
+ * @param stbl The string table to check in.
+ * @param string The string to check for.
+ * @return True if <code>stbl</code> contains <code>string</code>.
+ */
+int
+strtbl_contains_value (strtbl* stbl, char* string);
+
 #endif /* __STRTBL_H_ */

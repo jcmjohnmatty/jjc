@@ -6,7 +6,7 @@
 extern int yyline;
 extern int yycolumn;
 
-/* #include <symtbl.h> */
+#include <strtbl.h>
 #include <tokens.h>
 
 static int verbose_flag = -1;
@@ -100,7 +100,7 @@ main (int argc, char* argv[]) {
 
           /* Recongnize the tokens. */
           strtbl* stbl = strtbl_new ();
-          int symcnt = 0;
+          int idx = -1;
           int hit_eof = 0;
           int token = -1;
           PRINT_STBL_ROWS("Line", "Column", "Token", "Index in String table")
@@ -141,9 +141,9 @@ main (int argc, char* argv[]) {
                 case IDnum:
                   if (!strtbl_contains_value (stbl, yytext))
                     {
-                      strtbl_put (stbl, symcnt, yytext);
+                      idx = strtbl_put (stbl, yytext);
                     }
-                  PRINT_STBL_ROWIY(yyline, yycolumn, "IDnum", symcnt)
+                  PRINT_STBL_ROWIY(yyline, yycolumn, "IDnum", idx)
                   break;
 
                 case INTnum:
@@ -221,9 +221,9 @@ main (int argc, char* argv[]) {
                 case ICONSTnum:
                   if (!strtbl_contains_value (stbl, yytext))
                     {
-                      strtbl_put (stbl, symcnt, yytext);
+                      idx = strtbl_put (stbl, yytext);
                     }
-                  PRINT_STBL_ROWIY(yyline, yycolumn, "ICONSTnum", symcnt)
+                  PRINT_STBL_ROWIY(yyline, yycolumn, "ICONSTnum", idx)
                   break;
 
                 case IFnum:
@@ -265,9 +265,9 @@ main (int argc, char* argv[]) {
                 case SCONSTnum:
                   if (!strtbl_contains_value (stbl, yytext))
                     {
-                      strtbl_put (stbl, symcnt, yytext);
+                      idx = strtbl_put (stbl, yytext);
                     }
-                  PRINT_STBL_ROWIY(yyline, yycolumn, "SCONSTnum", symcnt)
+                  PRINT_STBL_ROWIY(yyline, yycolumn, "SCONSTnum", idx)
                   break;
 
                 case TIMESnum:
@@ -293,7 +293,7 @@ main (int argc, char* argv[]) {
                 {
                   /* ERROR */
                 }
-              ++symcnt;
+              idx = -1;
             }
           strtbl_delete (stbl);
         }
