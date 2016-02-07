@@ -3,6 +3,7 @@
 
 #include <lexer.h>
 
+#include <symtbl.h>
 #include <tokens.h>
 
 static int verbose_flag = -1;
@@ -77,6 +78,8 @@ main (int argc, char* argv[]) {
 		  yyin = infile;
 
 		  /* Recongnize the tokens. */
+		  symtbl* symtbl = malloc (sizeof (symtbl));
+		  int symcnt = 0;
 		  while (1)
 			{
 			  int hit_eof = 0;
@@ -106,11 +109,14 @@ main (int argc, char* argv[]) {
 				  break;
 
 				case IDnum:
+				  if (!symtbl_contains_value (symtbl, yytext))
+					{
+					  symtbl_put (symtbl, symcnt, yytext);
+					}
 				  printf ("%s ", yytext);
 				  break;
 
 				case INTnum:
-				  printf ("%s ", yytext);
 				  break;
 
 				case LBRACnum:
@@ -165,6 +171,11 @@ main (int argc, char* argv[]) {
 				  break;
 
 				case ICONSTnum:
+				  if (!symtbl_contains_value (symtbl, yytext))
+					{
+					  symtbl_put (symtbl, symcnt, yytext);
+					}
+				  printf ("%s ", yytext);
 				  break;
 
 				case IFnum:
@@ -195,6 +206,10 @@ main (int argc, char* argv[]) {
 				  break;
 
 				case SCONSTnum:
+				  if (!symtbl_contains_value (symtbl, yytext))
+					{
+					  symtbl_put (symtbl, symcnt, yytext);
+					}
 				  printf ("%s ", yytext);
 				  break;
 
@@ -219,6 +234,7 @@ main (int argc, char* argv[]) {
 				  /* ERROR */
 				}
 			}
+		  free (symtbl);
 		}
 	}
 }
