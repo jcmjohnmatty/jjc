@@ -1,3 +1,6 @@
+2016-02-07	John C. Matty	<jcmjohnmatty@me.com>
+	* all: Fixed build errors; Tested lexer; implemented symtbl.
+
 2016-02-06	John C. Matty	<jcmjohnmatty@me.com>
 	* .gitignore: Ignore all generated files.
 	* configure.ac: Building for initial lexer.
