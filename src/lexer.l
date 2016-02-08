@@ -9,6 +9,7 @@
 #include <string.h>
 #include <tokens.h>
 
+#include <errors.h>
 #include <strtbl.h>
 
 extern int yycolumn, yyline, yylval;
@@ -19,29 +20,69 @@ DIGIT         [0-9]
 ID            [\_a-zA-Z][\_a-zA-Z0-9]*
 INTEGER       []
 DELIM         [ \t]
-WS            {delim}+
 NEWLINE       [\n]
 
 %%
 
+"/*".*"*/"         { }
 \'(\\.|[^\\'])*\'  {
-  yycolumn += yyleng;
-
+  int length = yyleng;
   int i;
-  for (i = 0; i < strlen (yytext) - 1; i++)
+  int j;
+  int diff = 2;
+  for (i = 0; i < length - diff + 1; ++i)
     {
-      yytext[i] = yytext[i + 1];
+      /* Handle escape sequences... */
+      if (yytext[i] == '\\')
+        {
+          switch (yytext[i + 1])
+            {
+            case 'n':
+              yytext[i] = '\n';
+              break;
+
+            case 't':
+              yytext[i] = '\t';
+              break;
+
+            case '\'':
+              yytext[i] = '\'';
+              break;
+
+            case '\\':
+              yytext[i] = '\\';
+              break;
+
+            default:
+              /* Print error message and continue. */
+              char message[34];
+              sprintf (message, "unrecognized escape sequence `\\%c'", yytext[i + 1]);
+              warning_line_column (yyline, i - (diff - 2), message);
+              --i;
+              --diff;
+              break;
+            }
+          for (j = i + 2; j < length - diff + 1; ++j)
+            {
+              yytext[j - 1] = yytext[j + 1];
+            }
+          ++diff;
+        }
+      else
+        {
+          yytext[i] = yytext[i + 1];
+        }
     }
-  yytext[strlen (yytext) - 2] = '\0';
+  yytext[length - diff] = '\0';
 
   if (!strtbl_contains_value (string_table, yytext))
     {
       yylval = strtbl_put (string_table, yytext);
     }
 
+  yycolumn += length;
   return SCONSTnum;
 }
-"/*".*"*/"         { }
 {DELIM}            { yycolumn += yyleng; }
 {NEWLINE}          { yyline++; yycolumn=0; }
 \&\&               { yycolumn += yyleng; return ANDnum; }
@@ -101,7 +142,7 @@ void               { yycolumn += yyleng; return VOIDnum; }
   return IDnum;
 }
 <<EOF>>            { return EOFnum; }
-.                  { yycolumn += strlen (yytext); }
+.                  { yycolumn += yyleng; }
 %%
 
 int yyline = 1;

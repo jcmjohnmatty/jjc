@@ -8,22 +8,27 @@ extern int yyline;
 extern int yycolumn;
 extern int yylval;
 
+#include <jjc.h>
 #include <strtbl.h>
 #include <tokens.h>
 
-static int verbose_flag = -1;
+static const char* version_no = "1.0.0";
 
 static struct option long_options[] =
   {
     {"verbose", no_argument, 0, 'V'},
+	{"version", no_argument, 0, 'v'},
     {"brief",   no_argument, 0, 'b'},
     {"help",    no_argument, 0, 'h'},
     {0, 0, 0, 0}
   };
 
+char* sourcefile;
+
 int
 main (int argc, char* argv[]) {
   int c;
+  int verbose_flag;
   char* filename;
 
   /* Parse arguments. */
@@ -31,7 +36,7 @@ main (int argc, char* argv[]) {
     {
       int option_index = 0;
 
-      c = getopt_long (argc, argv, "Vbh",
+      c = getopt_long (argc, argv, "Vvbh",
                        long_options, &option_index);
 
       /* Detect the end of the options. */
@@ -43,23 +48,34 @@ main (int argc, char* argv[]) {
         case 'V':
           if (verbose_flag == 0)
             {
-              /* ERROR */
+			  fprintf (stderr, "jjc: fatal error: brief flag already set\n");
+			  print_usage ();
+			  exit (1);
             }
           verbose_flag = 1;
           break;
 
+		case 'v':
+		  print_version ();
+		  exit (0);
+		  break;
+
         case 'b':
           if (verbose_flag == 1)
             {
-              /* ERROR */
+			  fprintf (stderr, "jjc: fatal error: verbose flag already set\n");
+			  print_usage ();
+			  exit (1);
             }
           break;
 
         case 'h':
+		  print_usage ();
           exit (0);
           break;
 
         case '?':
+		  fprintf (stderr, "jjc: fatal error: unrecognized flag `-%s'\n", c);
           break;
 
         default:
@@ -76,14 +92,20 @@ main (int argc, char* argv[]) {
       /* Allocate string table. */
       string_table = strtbl_new ();
       /* Specify the input file. */
+	  sourcefile = argv[optind];
       FILE *infile = fopen (argv[optind], "r");
-      printf ("The output of our lexer for file `%s':\n\n", argv[optind]);
-      ++optind;
 
       if (!infile)
         {
-          /* ERROR */
+		  fprintf (stderr, "jjc: fatal error: missing input file\n");
+		  print_usage ();
+		  exit (1);
         }
+
+      printf ("The output of our lexer for file `%s':\n\n", argv[optind]);
+
+      ++optind;
+
       yyin = infile;
 
 #define PRINT_STBL_ROWS(l, c, t, i)             \
@@ -284,10 +306,34 @@ main (int argc, char* argv[]) {
               printf ("End of file\n");
               break;
             }
-          else
-            {
-              /* ERROR */
-            }
         }
     }
+  else
+	{
+	  fprintf (stderr, "jjc: fatal error: missing input file\n");
+	  print_usage ();
+	  exit (1);
+	}
+}
+
+void
+print_version (void)
+{
+  printf ("jjc %s\nCopyright 2016 John C. Matty.\n", version_no);
+}
+
+void
+print_usage (void)
+{
+  printf (
+"Usage: jjc [options] file\n"
+"Options:\n"
+"  --help       Print a brief help message, and then exit.\n"
+"  --brief      Print as little information about the compilation of the input\n"
+"               FILEs as possible.\n"
+"  --verbose    Print verbose information about the compilation of the input\n"
+"               FILEs.\n"
+"  --verbose    Print jjc\'s version and exit.\n"
+"\n"
+"To report bugs, please contact John C. Matty <jcmjohnmatty@me.com>.\n");
 }
