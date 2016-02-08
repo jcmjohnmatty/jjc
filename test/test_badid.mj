@@ -1,0 +1,7 @@
+/* -*- Mode:java -*- */
+program xyz;
+   class 3Test {
+     method void main() {
+     System.println('Hello World !!!');
+   }
+}
