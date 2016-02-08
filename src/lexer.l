@@ -38,9 +38,15 @@ NEWLINE       [\n]
   int length = yyleng;
   int i;
   int j;
-  int diff = 2;
   char message[34];
-  for (i = 0; i < length - diff + 1; ++i)
+
+  for (i = 0; i < length - 1; ++i)
+    {
+      yytext[i] = yytext[i + 1];
+    }
+  yytext[length - 2] = '\0';
+
+  for (i = 0; i < strlen (yytext); ++i)
     {
       /* Handle escape sequences... */
       if (yytext[i] == '\\')
@@ -49,40 +55,48 @@ NEWLINE       [\n]
             {
             case 'n':
               yytext[i] = '\n';
+              for (j = i + 1; j < strlen (yytext); ++j)
+                {
+                  yytext[j] = yytext[j + 1];
+                }
+              yytext[j - 1] = '\0';
               break;
 
             case 't':
               yytext[i] = '\t';
+              for (j = i + 1; j < strlen (yytext); ++j)
+                {
+                  yytext[j] = yytext[j + 1];
+                }
+              yytext[j - 1] = '\0';
               break;
 
             case '\'':
               yytext[i] = '\'';
+              for (j = i + 1; j < strlen (yytext); ++j)
+                {
+                  yytext[j] = yytext[j + 1];
+                }
+              yytext[j - 1] = '\0';
               break;
 
             case '\\':
               yytext[i] = '\\';
+              for (j = i + 1; j < strlen (yytext); ++j)
+                {
+                  yytext[j] = yytext[j + 1];
+                }
+              yytext[j - 1] = '\0';
               break;
 
             default:
               /* Print error message and continue. */
               sprintf (message, "unrecognized escape sequence `\\%c'", yytext[i + 1]);
-              warning_line_column (yyline, i - (diff - 2), message);
-              --i;
-              --diff;
+              warning_line_column (yyline, yycolumn + i, message);
               break;
             }
-          for (j = i + 2; j < length - diff + 1; ++j)
-            {
-              yytext[j - 1] = yytext[j + 1];
-            }
-          ++diff;
-        }
-      else
-        {
-          yytext[i] = yytext[i + 1];
         }
     }
-  yytext[length - diff] = '\0';
 
   if (!strtbl_contains_value (string_table, yytext))
     {
