@@ -98,7 +98,7 @@ main (int argc, char* argv[]) {
 
       if (!infile)
         {
-		  fprintf (stderr, "jjc: fatal error: missing input file\n");
+		  fprintf (stderr, "jjc: fatal error: unable to open file `%s'\n", sourcefile);
 		  print_usage ();
 		  exit (1);
         }
@@ -302,10 +302,13 @@ main (int argc, char* argv[]) {
 
           if (hit_eof == 1)
             {
-              printf ("\nString Table : ");
-              strtbl_print (string_table);
-              printf ("End of file\n");
-              break;
+			  if (jjc_errno <= 0)
+				{
+				  printf ("\nString Table : ");
+				  strtbl_print (string_table);
+				}
+			  printf ("End of file\n");
+			  break;
             }
         }
     }
