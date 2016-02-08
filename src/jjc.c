@@ -8,6 +8,7 @@ extern int yyline;
 extern int yycolumn;
 extern int yylval;
 
+#include <errors.h>
 #include <jjc.h>
 #include <strtbl.h>
 #include <tokens.h>
@@ -314,6 +315,13 @@ main (int argc, char* argv[]) {
 	  print_usage ();
 	  exit (1);
 	}
+
+  if (jjc_errno > 0)
+	{
+	  exit (1);
+	}
+
+  return 0;
 }
 
 void

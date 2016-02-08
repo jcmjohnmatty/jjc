@@ -24,7 +24,20 @@ NEWLINE       [\n]
 
 %%
 
-"/*".*"*/"         { }
+"/*"[^\*\/]*"*/"         {
+  int i;
+  for (i = 0; i < yyleng; ++i)
+	{
+	  if (yytext[i] == '\n')
+		{
+		  ++yyline;
+		}
+	}
+}
+"/*".*<<EOF>>            {
+  fatal_error_line_col (yyline, yycolumn,
+				  "end of file encountered while parsing comment");
+}
 \'(\\.|[^\\'])*\'  {
   int length = yyleng;
   int i;
@@ -82,6 +95,10 @@ NEWLINE       [\n]
 
   yycolumn += length;
   return SCONSTnum;
+}
+\'(\\.|[^\\'])*<<EOF>>  {
+  fatal_error_line_col (yyline, yycolumn,
+				  "end of file encountered while parsing string");
 }
 {DELIM}            { yycolumn += yyleng; }
 {NEWLINE}          { yyline++; yycolumn=0; }

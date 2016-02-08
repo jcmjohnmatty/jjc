@@ -5,6 +5,8 @@
 #define JJC_ERR_ERROR   1
 #define JJC_ERR_FATAL   2
 
+extern int jjc_errno;
+
 /**
  * @return An appropriately defined macro indicating the severity.
  */
