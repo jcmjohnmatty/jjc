@@ -22,27 +22,24 @@ INTEGER       []
 DELIM         [ \t]
 NEWLINE       [\n]
 
+%s COMMENT
+%s STRING
 %%
 
-"/*"[^\*\/]*"*/"         {
-  int i;
-  for (i = 0; i < yyleng; ++i)
-	{
-	  if (yytext[i] == '\n')
-		{
-		  ++yyline;
-		}
-	}
-}
-"/*".*<<EOF>>            {
-  fatal_error_line_col (yyline, yycolumn,
-				  "end of file encountered while parsing comment");
-}
-\'(\\.|[^\\'])*\'  {
+
+<INITIAL>"/*"               { BEGIN(COMMENT); }
+<COMMENT>"*/"               { BEGIN(INITIAL); }
+<COMMENT><<EOF>>            { fatal_error_line_column (yyline, yycolumn,
+                            "end of file encountered while parsing comment"); }
+<COMMENT>\n                 { ++yyline; yycolumn = 0; }
+<COMMENT>.                  { yycolumn += yyleng; }
+
+<INITIAL>\'(\\.|[^\\'])*\'  {
   int length = yyleng;
   int i;
   int j;
   int diff = 2;
+  char message[34];
   for (i = 0; i < length - diff + 1; ++i)
     {
       /* Handle escape sequences... */
@@ -68,7 +65,6 @@ NEWLINE       [\n]
 
             default:
               /* Print error message and continue. */
-              char message[34];
               sprintf (message, "unrecognized escape sequence `\\%c'", yytext[i + 1]);
               warning_line_column (yyline, i - (diff - 2), message);
               --i;
@@ -96,54 +92,61 @@ NEWLINE       [\n]
   yycolumn += length;
   return SCONSTnum;
 }
-\'(\\.|[^\\'])*<<EOF>>  {
-  fatal_error_line_col (yyline, yycolumn,
-				  "end of file encountered while parsing string");
+<INITIAL>\'(\\.|[^\\'])*    {
+  fatal_error_line_column (yyline, yycolumn,
+				           "end of file encountered while parsing string");
 }
-{DELIM}            { yycolumn += yyleng; }
-{NEWLINE}          { yyline++; yycolumn=0; }
-\&\&               { yycolumn += yyleng; return ANDnum; }
-\:\=               { yycolumn += yyleng; return ASSGNnum; }
-declarations       { yycolumn += yyleng; return DECLARATIONnum; }
-\.                 { yycolumn += yyleng; return DOTnum; }
-enddeclarations    { yycolumn += yyleng; return ENDDECLARATIONnum; }
-\=                 { yycolumn += yyleng; return EQUALnum; }
-\>                 { yycolumn += yyleng; return GTnum; }
-int                { yycolumn += yyleng; return INTnum; }
-\[                 { yycolumn += yyleng; return LBRACnum; }
-\(                 { yycolumn += yyleng; return LPARENnum; }
-method             { yycolumn += yyleng; return METHODnum; }
-\!\=               { yycolumn += yyleng; return NEnum; }
-\|\|               { yycolumn += yyleng; return ORnum; }
-program            { yycolumn += yyleng; return PROGRAMnum; }
-\]                 { yycolumn += yyleng; return RBRACnum; }
-\)                 { yycolumn += yyleng; return RPARENnum; }
-\;                 { yycolumn += yyleng; return SEMInum; }
-val                { yycolumn += yyleng; return VALnum; }
-while              { yycolumn += yyleng; return WHILEnum; }
-class              { yycolumn += yyleng; return CLASSnum; }
-\,                 { yycolumn += yyleng; return COMMAnum; }
-\/                 { yycolumn += yyleng; return DIVIDEnum; }
-else               { yycolumn += yyleng; return ELSEnum; }
-\=\=               { yycolumn += yyleng; return EQnum; }
-\>\=               { yycolumn += yyleng; return GEnum; }
-\{                 { yycolumn += yyleng; return LBRACEnum; }
-\<\=               { yycolumn += yyleng; return LEnum; }
-\<                 { yycolumn += yyleng; return LTnum; }
-\-                 { yycolumn += yyleng; return MINUSnum; }
-\!                 { yycolumn += yyleng; return NOTnum; }
-\+                 { yycolumn += yyleng; return PLUSnum; }
-\}                 { yycolumn += yyleng; return RBRACEnum; }
-return             { yycolumn += yyleng; return RETURNnum; }
-\*                 { yycolumn += yyleng; return TIMESnum; }
-void               { yycolumn += yyleng; return VOIDnum; }
+<INITIAL>{DELIM}            { yycolumn += yyleng; }
+<INITIAL>{NEWLINE}          { yyline++; yycolumn=0; }
+<INITIAL>\&\&               { yycolumn += yyleng; return ANDnum; }
+<INITIAL>\:\=               { yycolumn += yyleng; return ASSGNnum; }
+<INITIAL>declarations       { yycolumn += yyleng; return DECLARATIONnum; }
+<INITIAL>\.                 { yycolumn += yyleng; return DOTnum; }
+<INITIAL>enddeclarations    { yycolumn += yyleng; return ENDDECLARATIONnum; }
+<INITIAL>\=                 { yycolumn += yyleng; return EQUALnum; }
+<INITIAL>\>                 { yycolumn += yyleng; return GTnum; }
+<INITIAL>int                { yycolumn += yyleng; return INTnum; }
+<INITIAL>\[                 { yycolumn += yyleng; return LBRACnum; }
+<INITIAL>\(                 { yycolumn += yyleng; return LPARENnum; }
+<INITIAL>method             { yycolumn += yyleng; return METHODnum; }
+<INITIAL>\!\=               { yycolumn += yyleng; return NEnum; }
+<INITIAL>\|\|               { yycolumn += yyleng; return ORnum; }
+<INITIAL>program            { yycolumn += yyleng; return PROGRAMnum; }
+<INITIAL>\]                 { yycolumn += yyleng; return RBRACnum; }
+<INITIAL>\)                 { yycolumn += yyleng; return RPARENnum; }
+<INITIAL>\;                 { yycolumn += yyleng; return SEMInum; }
+<INITIAL>val                { yycolumn += yyleng; return VALnum; }
+<INITIAL>while              { yycolumn += yyleng; return WHILEnum; }
+<INITIAL>class              { yycolumn += yyleng; return CLASSnum; }
+<INITIAL>\,                 { yycolumn += yyleng; return COMMAnum; }
+<INITIAL>\/                 { yycolumn += yyleng; return DIVIDEnum; }
+<INITIAL>else               { yycolumn += yyleng; return ELSEnum; }
+<INITIAL>\=\=               { yycolumn += yyleng; return EQnum; }
+<INITIAL>\>\=               { yycolumn += yyleng; return GEnum; }
+<INITIAL>\{                 { yycolumn += yyleng; return LBRACEnum; }
+<INITIAL>\<\=               { yycolumn += yyleng; return LEnum; }
+<INITIAL>\<                 { yycolumn += yyleng; return LTnum; }
+<INITIAL>\-                 { yycolumn += yyleng; return MINUSnum; }
+<INITIAL>\!                 { yycolumn += yyleng; return NOTnum; }
+<INITIAL>\+                 { yycolumn += yyleng; return PLUSnum; }
+<INITIAL>\}                 { yycolumn += yyleng; return RBRACEnum; }
+<INITIAL>return             { yycolumn += yyleng; return RETURNnum; }
+<INITIAL>\*                 { yycolumn += yyleng; return TIMESnum; }
+<INITIAL>void               { yycolumn += yyleng; return VOIDnum; }
 
-{DIGIT}+           {
+<INITIAL>{DIGIT}+           {
   yycolumn += yyleng;
   yylval = atoi (yytext);
   return ICONSTnum;
 }
-{ID}               {
+<INITIAL>{DIGIT}{ID}        {
+  yycolumn += yyleng;
+  char* message = malloc (18 + strlen (yytext) + 1);
+  sprintf (message, "invalid identifier %s", yytext);
+  error_line_column (yyline, yycolumn, message);
+  free (message);
+}
+<INITIAL>{ID}               {
   yycolumn += yyleng;
   int i;
   for (i = 0; i < strlen (yytext); ++i)
@@ -158,8 +161,29 @@ void               { yycolumn += yyleng; return VOIDnum; }
 
   return IDnum;
 }
-<<EOF>>            { return EOFnum; }
-.                  { yycolumn += yyleng; }
+<INITIAL>\:\=               {
+  yycolumn += yyleng;
+  error_line_column (yyline, yycolumn, "invalid operator");
+}
+<INITIAL>\|\&               {
+  yycolumn += yyleng;
+  error_line_column (yyline, yycolumn, "invalid operator");
+}
+<INITIAL>\&\|               {
+  yycolumn += yyleng;
+  error_line_column (yyline, yycolumn, "invalid operator");
+}
+<INITIAL>\=\<               {
+  yycolumn += yyleng;
+  error_line_column (yyline, yycolumn, "invalid operator");
+}
+<INITIAL>\=\>               {
+  yycolumn += yyleng;
+  error_line_column (yyline, yycolumn, "invalid operator");
+}
+<INITIAL><<EOF>>            { return EOFnum; }
+<INITIAL>.                  { yycolumn += yyleng; }
+
 %%
 
 int yyline = 1;

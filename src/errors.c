@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <errors.h>
 #include <source.h>
@@ -10,7 +11,7 @@ fatal_error_line_column (int         line,
                          int         column,
                          const char* message)
 {
-  fprintf (stderr, "%s:%d:%d: fatal error: %s", sourcefile, line, column,
+  fprintf (stderr, "%s:%d:%d: fatal error: %s\n", sourcefile, line, column,
 		   message);
   jjc_errno = JJC_ERR_FATAL;
   exit (1);
@@ -22,7 +23,7 @@ error_line_column (int         line,
                    int         column,
                    const char* message)
 {
-  fprintf (stderr, "%s:%d:%d: error: %s", sourcefile, line, column, message);
+  fprintf (stderr, "%s:%d:%d: error: %s\n", sourcefile, line, column, message);
   jjc_errno = JJC_ERR_ERROR;
   return JJC_ERR_ERROR;
 }
@@ -32,7 +33,7 @@ warning_line_column (int         line,
                      int         column,
                      const char* message)
 {
-  fprintf (stderr, "%s:%d:%d: warning: %s", sourcefile, line, column, message);
+  fprintf (stderr, "%s:%d:%d: warning: %s\n", sourcefile, line, column, message);
   jjc_errno = JJC_ERR_WARNING;
   return JJC_ERR_WARNING;
 }
