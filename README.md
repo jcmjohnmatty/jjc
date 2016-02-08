@@ -2,7 +2,7 @@
 A (Mini-)Java Compiler implementation.
 
 ## Prerequisites
-To build `jjc`, autoconf and automake are required.  These can usually be
+To build `jjc`, `autoconf` and `automake` are required.  These can usually be
 installed through your system's package manager.
 
 `flex` is also required, as it is used to implement `jjc`'s lexer.
@@ -23,13 +23,14 @@ this, run:
     $ make
 
 ## Installation
-This can also be done using autotools/make:
+This can also be done very easily:
 
     # make install
 
 ## Testing
 The above steps build the executable `jjc`.  To test it, various Mini-Java
-sources have been provided in the `test` directory, which `jjc` can compile.
+(`.mj`) sources have been provided in the `test` directory, which `jjc` can
+compile.
 
 ### Using jjc
 The basic usage of `jjc` is to supply a single Mini-Java source file to it.
