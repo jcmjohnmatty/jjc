@@ -88,6 +88,10 @@ NEWLINE       [\n]
     {
       yylval = strtbl_put (string_table, yytext);
     }
+  else
+    {
+      yylval = strtbl_get_index (string_table, yytext);
+    }
 
   yycolumn += length;
   return SCONSTnum;
@@ -151,12 +155,16 @@ NEWLINE       [\n]
   int i;
   for (i = 0; i < strlen (yytext); ++i)
     {
-      yylval = tolower(yytext[i]);
+      yytext[i] = tolower(yytext[i]);
     }
 
   if (!strtbl_contains_value (string_table, yytext))
     {
       yylval = strtbl_put (string_table, yytext);
+    }
+  else
+    {
+      yylval = strtbl_get_index (string_table, yytext);
     }
 
   return IDnum;

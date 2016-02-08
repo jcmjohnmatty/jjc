@@ -96,6 +96,32 @@ strtbl_put (strtbl* stbl, char* string)
 }
 
 int
+strtbl_get_index (strtbl* stbl, char* string)
+{
+  int i;
+  int length = strlen (string);
+  int start = 0;
+
+  for (i = 0; i < stbl->n_strings; ++i)
+	{
+	  if (start + length > stbl->buffer_length)
+		{
+		  return -1;
+		}
+	  if (strncmp ((char*) (stbl->buffer + start), string, length) == 0)
+		{
+		  return start - 1;
+		}
+	  while (stbl->buffer[start] != ' ')
+		{
+		  ++start;
+		}
+	  ++start;
+	}
+  return -1;
+}
+
+int
 strtbl_contains_value (strtbl* stbl, char* string)
 {
   int i;
@@ -103,7 +129,7 @@ strtbl_contains_value (strtbl* stbl, char* string)
   int start = 0;
   for (i = 0; i < stbl->n_strings; ++i)
 	{
-	  if (start + length >= stbl->buffer_length)
+	  if (start + length > stbl->buffer_length)
 		{
 		  return 0;
 		}
@@ -125,7 +151,7 @@ strtbl_print (strtbl* stbl)
 {
   int i;
   /* Skip the trailing space... */
-  for (i = 0; i < stbl->buffer_length - 1; ++i)
+  for (i = 0; i < stbl->buffer_length; ++i)
 	{
 	  printf ("%c", stbl->buffer[i]);
 	}

@@ -42,6 +42,15 @@ int
 strtbl_put (strtbl* stbl, char* string);
 
 /**
+ * @brief Get the index of a string in a string table.
+ * @param stbl The string table to check in.
+ * @param string The string to check for.
+ * @return The index of  <code>string</code>, or -1 if it is not in there.
+ */
+int
+strtbl_get_index (strtbl* stbl, char* string);
+
+/**
  * @brief Check if a string table contains a string.
  * @param stbl The string table to check in.
  * @param string The string to check for.
