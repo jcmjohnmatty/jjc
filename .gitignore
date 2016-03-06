@@ -8,6 +8,7 @@ Makefile.in
 *.Po
 *.o
 *.dSYM
+*.bak
 bin
 aclocal.m4
 autom4te.cache
