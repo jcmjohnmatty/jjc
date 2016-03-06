@@ -29,11 +29,16 @@ NEWLINE       [\n]
 
 <INITIAL>"/*"               { BEGIN(COMMENT); }
 <COMMENT>"*/"               { BEGIN(INITIAL); }
-<COMMENT><<EOF>>            { fatal_error_line_column (yyline, yycolumn,
-                            "end of file encountered while parsing comment"); }
+<COMMENT><<EOF>>            { error_line_column (yyline, yycolumn,
+                                                 "unterminated comment");
+                              return EOFnum; }
 <COMMENT>\n                 { ++yyline; yycolumn = 0; }
 <COMMENT>.                  { yycolumn += yyleng; }
-
+<INITIAL>\'([^\\'])*[<<EOF>>]  {
+  warning_line_column(yyline, yycolumn + yyleng,
+                      "missing terminating ' character");
+  return EOFnum;
+}
 <INITIAL>\'(\\.|[^\\'])*\'  {
   int length = yyleng;
   int i;
@@ -42,6 +47,11 @@ NEWLINE       [\n]
 
   for (i = 0; i < length - 1; ++i)
     {
+      if (yytext[i] == '\n')
+        {
+          warning_line_column(yyline, yycolumn + i,
+                              "missing terminating ' character");
+        }
       yytext[i] = yytext[i + 1];
     }
   yytext[length - 2] = '\0';
@@ -109,10 +119,6 @@ NEWLINE       [\n]
 
   yycolumn += length;
   return SCONSTnum;
-}
-<INITIAL>\'(\\.|[^\\'])*    {
-  fatal_error_line_column (yyline, yycolumn,
-				           "end of file encountered while parsing string");
 }
 <INITIAL>{DELIM}            { yycolumn += yyleng; }
 <INITIAL>{NEWLINE}          { yyline++; yycolumn=0; }
