@@ -5,7 +5,8 @@
 
 ast dummy = { DUMMYNODE, 0, 0, 0, 0 };
 ast* root;
-ast* type = NULL;
+ast* field_declaration_type = NULL;
+ast* method_declaration_type = NULL;
 
 ast*
 ast_null (void)

@@ -80,10 +80,11 @@ struct ast
 typedef struct ast ast;
 
 /** The root node for our ast. */
-extern ast root;
+extern ast* root;
 
-/** The type. */
-extern ast type;
+/** The type for field declarations. */
+extern ast* field_declaration_type;
+extern ast* method_declaration_type;
 
 /**
  * @brief YYSTYPE.

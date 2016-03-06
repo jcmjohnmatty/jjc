@@ -164,7 +164,7 @@ FIELD_DECLARATION_LIST
 VARIABLE_DECLARATION_OR_INITIALIZATION_STATEMENT
 : TYPE VARIABLE_DECLARATION_OR_INITIALIZATION_LIST SEMI
 {
-  type = $1;
+  field_declaration_type = $1;
   $$ = $2;
 }
 ;
@@ -189,7 +189,7 @@ VARIABLE_DECLARATION_OR_INITIALIZATION_LIST
 VARIABLE_DECLARATION_OR_INITIALIZATION
 : VARIABLE_DECLARATION_ID
 {
-  $$ = ast_new (COMMAOP, $1, ast_new (COMMAOP, type, NULL));
+  $$ = ast_new (COMMAOP, $1, ast_new (COMMAOP, field_declaration_type, NULL));
 }
 | VARIABLE_INITIALIZATION
 {
@@ -211,7 +211,7 @@ VARIABLE_DECLARATION_ID
 VARIABLE_INITIALIZATION
 : VARIABLE_DECLARATION_ID EQUAL VARIABLE_INITALIZER
 {
-  $$ = ast_new (COMMAOP, $1, ast_new (COMMAOP, type, $3));
+  $$ = ast_new (COMMAOP, $1, ast_new (COMMAOP, field_declaration_type, $3));
 }
 ;
 
@@ -233,7 +233,7 @@ VARIABLE_INITALIZER
 ARRAY_INITALIZER
 : LBRACE VARIABLE_INITALIZER_LIST RBRACE
 {
-  $$ = ast_new (ARRAYTYPEOP, $2, type);
+  $$ = ast_new (ARRAYTYPEOP, $2, field_declaration_type);
 }
 ;
 
@@ -261,11 +261,11 @@ ARRAY_CREATION_EXPRESSION
 ;
 
 EXPRESSION_BRACKET_LIST
-: RBRAC EXPRESSION LBRAC
+: LBRAC EXPRESSION RBRAC
 {
   $$ = ast_new (COMMAOP, NULL, $2);
 }
-| EXPRESSION_LIST RBRAC EXPRESSION LBRAC
+| EXPRESSION_LIST LBRAC EXPRESSION RBRAC
 {
   $$ = ast_new (COMMAOP, NULL, NULL);
   $$ = ast_set_right_subtree ($$, $3);
@@ -295,7 +295,36 @@ METHOD_DECLARATION_LIST
 }
 ;
 
+VOID
+:
+{
+  $$ = VOID;
+}
+;
+
+TYPE_OR_VOID
+: TYPE
+| VOID
+{
+  method_declaration_type = $1;
+}
+;
+
 METHOD_DECLARATION
+: METHOD TYPE_OR_VOID ID LPAREN FORMAL_PARAMETER_LIST RPAREN BLOCK
+{
+  ast* head_op = ast_new (HEADOP, $3, $4);
+  $$ = ast_new (METHODOP, head_op, $4);
+}
+;
+
+FORMAL_PARAMETER_LIST
+:
+{
+}
+;
+
+BLOCK
 :
 {
 }
