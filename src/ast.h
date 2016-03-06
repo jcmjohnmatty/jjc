@@ -1,213 +1,259 @@
 #ifndef __AST_H_
 #define __AST_H_
 
-#define ProgramOp       100
-#define BodyOp          101
-#define DeclOp          102
-#define CommaOp         103
-#define ArrayTypeOp     104
-#define TypeIdOp        105
-#define BoundOp         106
-#define RecompOp        107
-#define ToOp            108
-#define DownToOp        109
-#define ConstantIdOp    110
-#define ProceOp         111
-#define FuncOp          112
-#define HeadOp          113
-#define RArgTypeOp      114
-#define VArgTypeOp      115
-#define StmtOp          116
-#define IfElseOp        117
-#define LoopOp          118
-#define SpecOp          119
-#define RoutineCallOp   120
-#define AssignOp        121
-#define ReturnOp        122
-#define AddOp           123
-#define SubOp           124
-#define MultOp          125
-#define DivOp           126
-#define LTOp            127
-#define GTOp            128
-#define EQOp            129
-#define NEOp            130
-#define LEOp            131
-#define GEOp            132
-#define AndOp           133
-#define OrOp            134
-#define UnaryNegOp      135
-#define NotOp           136
-#define VarOp           137
-#define SelectOp        138
-#define IndexOp         139
-#define FieldOp         140
-#define SubrangeOp      141
-#define ExitOp          142
-#define ClassOp         143
-#define MethodOp        144
-#define ClassDefOp      145
+#define PROGRAMOP       100
+#define BODYOP          101
+#define DECLOP          102
+#define COMMAOP         103
+#define ARRAYTYPEOP     104
+#define TYPEIDOP        105
+#define BOUNDOP         106
+#define RECOMPOP        107
+#define TOOP            108
+#define DOWNTOOP        109
+#define CONSTANTIDOP    110
+#define PROCEOP         111
+#define FUNCOP          112
+#define HEADOP          113
+#define RARGTYPEOP      114
+#define VARGTYPEOP      115
+#define STMTOP          116
+#define IFELSEOP        117
+#define LOOPOP          118
+#define SPECOP          119
+#define ROUTINECALLOP   120
+#define ASSIGNOP        121
+#define RETURNOP        122
+#define ADDOP           123
+#define SUBOP           124
+#define MULTOP          125
+#define DIVOP           126
+#define LTOP            127
+#define GTOP            128
+#define EQOP            129
+#define NEOP            130
+#define LEOP            131
+#define GEOP            132
+#define ANDOP           133
+#define OROP            134
+#define UNARYNEGOP      135
+#define NOTOP           136
+#define VAROP           137
+#define SELECTOP        138
+#define INDEXOP         139
+#define FIELDOP         140
+#define SUBRANGEOP      141
+#define EXITOP          142
+#define CLASSOP         143
+#define METHODOP        144
+#define CLASSDEFOP      145
 
-#define IDNode          200
-#define NUMNode         201
-#define CHARNode        202
-#define STRINGNode      203
-#define DUMMYNode       204
-#define EXPRNode        205
-#define INTEGERTNode    206
-#define CHARTNode       207
-#define BOOLEANTNode    208
-#define STNode          209
+#define IDNODE          200
+#define NUMNODE         201
+#define CHARNODE        202
+#define STRINGNODE      203
+#define DUMMYNODE       204
+#define EXPRNODE        205
+#define INTEGERTNODE    206
+#define CHARTNODE       207
+#define BOOLEANTNODE    208
+#define STNODE          209
 
 /**
  * @brief Syntax tree node struct.
 */
-struct treenode
+struct ast
 {
   /** */
-  int NodeKind;
+  int node_type;
   /** */
-  int NodeOpType
+  int operation_type;
   /** */
-  int IntVal;
+  int data;
   /** */
-  struct treenode* LeftC;
+  struct ast* left;
   /** */
-  struct treenode* RightC;
+  struct ast* right;
 };
 
-/** */
-typedef struct treenode treenode;
-/** */
-typedef struct treenode ILTree;
-/** */
-typedef struct treenode* tree;
+/** Typedef for struct ast. */
+typedef struct ast ast;
 
-/** */
-extern tree Root;
+/** The root node for our ast. */
+extern ast root;
 
 /**
  * @brief YYSTYPE.
  */
 typedef union
 {
-  int intg;
-  tree tptr;
+  int constant;
+  ast* tree;
 } YYSTYPE;
 
 /**
- * @brief Return a DUMMYNode.
+ * @brief Create a leaf node with a given node_type and data.
  *
- * All the dummy nodes correspond to the memory location of the NULL node.
- * Therefore, any attampt to use it for the other purposes will be problematic.
+ * @param[in] type The new type of the for the <code>ast</code>'s leaf.
+ * @param[in] d    The data to store in the new leaf.
  */
-tree
-NullExp (void);
+ast*
+ast_make_leaf (int type, int d);
 
 /**
- * @brief Create a leaf node with a given NodeKind and IntVal.
- */
-tree
-MakeLeaf (int Kind, int N);
-
-/**
- * @brief Create an interior node with a given NodeOpType and left and right
- *        subtrees.
- */
-tree
-MakeTree (int NodeOp, tree Left, tree Right);
-
-/**
- * @brief Get a treenode's left subtree.
- */
-tree
-LeftChild (tree T);
-
-/**
- * @brief Get a treenode's right subtree.
- */
-tree
-RightChild (tree T);
-
-/**
- * @brief Set the leftmost child of T2 to T1.
+ * @brief Create an interior node with a given operation_type and left and
+ *        right subtrees.
  *
- * @return T2.
+ * @param[in] operation The operation for the new <code>ast</code>.
+ * @param[in] l         The left subtree for the new <code>ast</code>.
+ * @param[in] r         The right subtree for the new <code>ast</code>.
  *
- * @todo Change so that callers just look at T2 for the return value.
+ * @return A pointer to the newly constructed <code>ast</code>.
  */
-tree
-MkLeftC (tree T1, tree T2);
+ast*
+ast_new (int operation, ast* l, ast* r);
 
 /**
- * @brief Get a tree's NodeOpType.
- */
-int
-NodeOp (tree T);
-
-/**
- * @brief Get a tree's IntVal.
- */
-int
-IntVal (tree T);
-
-/**
- * @brief Check whether or not a tree is a NULL tree.
- */
-int
-IsNull (tree T);
-
-/**
- * @brief Set the rightmost child of T2 to T1.
+ * @brief Recursively free the memory used for an ast.
  *
- * @return T2.
- *
- * @todo Change so that callers just look at T2 for the return value.
- */
-tree
-MkRightC (tree T1, tree T2);
-
-/**
- * @brief Copy the contents of a souce node to a destination node.
+ * @param[in] tree The <code>ast</code> to delete.
  */
 void
-SetNode (tree, tree);
+ast_delete (ast* tree);
+
+/**
+ * @brief Get an <code>ast</code>'s left subtree.
+ *
+ * @param[in] tree The <code>ast</code> to get the left subtree of.
+ *
+ * @return <code>tree</code>'s left subtree.
+ */
+ast*
+ast_get_left (ast* tree);
+
+/**
+ * @brief Get an <code>ast</code>'s right subtree.
+ *
+ * @param[in] tree The <code>ast</code> to get the right subtree of.
+ *
+ * @return <code>tree</code>'s right subtree.
+ */
+ast*
+ast_get_right (ast* tree);
+
+/**
+ * @brief Set the leftmost subtree of an <code>ast</code>.
+ *
+ * @param[in, out] tree The tree whose left subtree to modify.
+ * @param[in]      left The new leftmost subtree for <code>tree</code>.
+ *
+ * @return The new ast with the left subtree modified.
+ */
+ast*
+ast_set_left_subtree (ast* tree, ast* left);
+
+/**
+ * @brief Set the rightmost child of an <code>ast</code>.
+ *
+ * @param[in, out] tree  The tree whose right subtree to modify.
+ * @param[in]      right The new rightmost subtree for <code>tree</code>.
+ *
+ * @return The new right subtree.
+ */
+ast*
+ast_set_right_subtree (ast* tree, ast* right);
+
+/**
+ * @brief Get an <code>ast</code>'s NodeOpType.
+ *
+ * @param[in] tree The <code>ast</code> to get the type of.
+ *
+ * @return The type of <code>tree</code>.
+ */
+int
+ast_get_type (ast* tree);
+
+/**
+ * @brief Get an <code>ast</code>'s data.
+ *
+ * @param[in] tree The <code>ast</code> to get the data of.
+ *
+ * @return <code>tree</code>'s data.
+ */
+int
+ast_get_data (ast* tree);
+
+/**
+ * @brief Copy the contents of a one <code>ast</code> to another.
+ *
+ * @param[in, out] tree  The <code>ast</code> to assign to.
+ * @param[in]      other The <code>ast</code> to assign to <code>tree</code>.
+ */
+void
+ast_assign (ast* tree, ast* other);
 
 /**
  * @brief Set a tree's operation.
  *
- * This is only for interior EXPRNode nodes.
- */
-void
-SetNodeOp (tree, int);
-
-/**
- * @brief Set a tree's root and all left subtrees to a NewOp node.
+ * This is only for interior EXPRNODE nodes.
  *
- * This is only used during the construction of record component trees, where.
+ * @param[in, out] tree      The <code>ast</code> to set the operation of.
+ * @param[in]      operation The operation code.
  */
 void
-SetLeftTreeOp (tree T, int Op);
+ast_set_operation (ast* tree, int operation);
 
 /**
- * @brief Set a tree's root and all right subtrees to a NewOp node.
+ * @brief Set an <code>ast</code>'s root and all left subtrees' operation type.
  *
- * This is only used during the construction of function call trees, where
- * the function takes arguments.
+ * This is only used during the construction of record component
+ * <code>ast</code>s.
+ *
+ * @param[in, out] tree      The <code>ast</code> whose left subtree operation
+ *                           to set.
+ * @param[in]      operation The operation code.
  */
 void
-SetRightTreeOp (tree T, int Op);
+ast_set_left_subtree_operation (ast* T, int operation);
 
 /**
- * @brief Set T's LeftChild.
+ * @brief Set an <code>ast</code>'s root and all right subtrees' operation
+ * type.
+ *
+ * This is only used during the construction of function call
+ * <code>ast</code>s, where the function takes arguments.
+ *
+ * @param[in, out] tree      The <code>ast</code> whose right subtree operation
+ *                           to set.
+ * @param[in]      operation The operation code.
  */
 void
-SetLeftChild (tree T, tree NewC);
+ast_set_right_subtree_operation (ast* T, int operation);
 
 /**
- * @brief Set T's RightChild.
+ * @brief Set an <code>ast</code>'s left subtree.
+ *
+ * @param[in, out] tree The <code>ast</code> to set the left subtree of.
+ * @param[in]      l    The new left subtree for <code>tree</code>.
  */
 void
-SetRightChild (tree T, tree NewC);
+ast_set_left_subtree (ast* tree, ast* l);
+
+/**
+ * @brief Set an <code>ast</code>'s right subtree.
+ *
+ * @param[in, out] tree The <code>ast</code> to set the right subtree of.
+ * @param[in]      r    The new right subtree for <code>tree</code>.
+ */
+void
+ast_set_right_subtree (ast* tree, ast* r);
+
+/**
+ * @brief Print an ast.
+ *
+ * @param[in] tree The ast to print.
+ */
+void
+ast_print (ast* tree);
 
 #endif /* __AST_H_ */

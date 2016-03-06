@@ -1,277 +1,262 @@
-/*
-  proj2.c
-
-  This file consists of 4 parts
-  a. the data structure of a tree node
-  b. the tree operation functions, from "CopyTree"
-  to "SetRightChild"
-  c. the tree printing function
-
-  The functions in this file are contributed by Chunmin Qiao and
-  Aggelos Varvitsiotis.
-*/
-
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <ast.h>
 
-ILTree dummy = { DUMMYNode, 0, 0, 0, 0 };
-tree root;
+ast dummy = { DUMMYNODE, 0, 0, 0, 0 };
+ast* root;
 
-tree
-NullExp (void)
+ast*
+ast_null (void)
 {
   return &dummy;
 }
 
-tree
-MakeLeaf (int Kind, int N)
+ast*
+ast_make_leaf (int type, int d)
 {
-  tree p;
+  ast* p;
 
-  p = (tree) malloc (sizeof (ILTree));
-  p->NodeKind = Kind;
-  p->IntVal = N;
+  p = (ast*) malloc (sizeof (ast));
+  p->node_type = type;
+  p->data = d;
   return p;
 }
 
-tree
-MakeTree (int NodeOp, tree Left, tree Right)
+ast*
+ast_new (int operation, ast* l, ast* r)
 {
-  tree p;
+  ast* p;
 
-  p = (tree) malloc (sizeof (ILTree));
-  p->NodeKind = EXPRNode;
-  p->NodeOpType = NodeOp;
-  p->LeftC = Left;
-  p->RightC = Right;
+  p = (ast*) malloc (sizeof (ast));
+  p->node_type = EXPRNODE;
+  p->operation_type = operation;
+  p->left = l;
+  p->right = r;
   return p;
 }
 
-tree
-LeftChild (tree T)
+void
+ast_delete (ast* tree)
 {
-  if (T->NodeKind != EXPRNode)
+  if (tree == NULL)
     {
-      return NullExp();
+      return;
+    }
+
+  ast_delete (tree->left);
+  ast_delete (tree->right);
+  free (tree);
+}
+
+ast*
+ast_get_left (ast* tree)
+{
+  if (tree->node_type != EXPRNODE)
+    {
+      return NULL;
     }
   else
     {
-      return T->LeftC;
+      return tree->left;
     }
 }
 
-tree
-RightChild (tree T)
+ast*
+ast_get_right (ast* tree)
 {
-  if (T->NodeKind != EXPRNode)
+  if (tree->node_type != EXPRNODE)
     {
-      return NullExp ();
+      return NULL;
     }
   else
     {
-      return T->RightC;
+      return tree->right;
     }
 }
 
-tree
-MkLeftC (tree T1, tree T2)
+ast*
+ast_set_left_subtree (ast* tree, ast* left)
 {
-  tree p;
-  tree q;
+  ast* p;
+  ast* q;
 
-  if (IsNull (T2))
+  if (tree == NULL)
     {
-      return T1;
+      return left;
     }
 
-  p = T2;
-  q = LeftChild (p);
+  p = tree;
+  q = ast_get_left (p);
 
-  /* Replace the leftmost DUMMYNode. */
-  while (!IsNull (q))
+  /* Replace the leftmost DUMMYNODE. */
+  while (q != NULL)
     {
       p = q;
-      q = LeftChild(p);
+      q = ast_get_left (p);
     }
-  p->LeftC = T1;
+  p->left = left;
 
-  return T2;
+  return tree;
 }
 
-tree
-MkRightC (tree T1, tree T2)
+ast*
+ast_set_right_subtree (ast* tree, ast* right)
 {
-  tree p,q;
+  ast* p;
+  ast* q;
 
-  if (IsNull (T2))
+  if (tree == NULL)
     {
-      return T1;
+      return right;
     }
 
-  p = T2;
-  q = RightChild (p);
+  p = tree;
+  q = ast_get_right (p);
 
-  /* Replace the rightmost DUMMYNode. */
-  while (!IsNull (q))
+  /* Replace the rightmost DUMMYNODE. */
+  while (q != NULL)
     {
       p = q;
-      q = RightChild (p);
+      q = ast_get_right (p);
     }
-  p->RightC = T1;
+  p->right = right;
 
-  return T2;
+  return tree;
 }
 
 int
-NodeOp (tree T)
+ast_get_type (ast* tree)
 {
-  if (T->NodeKind != EXPRNode)
+  if (tree->node_type != EXPRNODE)
     {
-      printf ("NodeOP(): This node must be an EXPRNode!\n");
+      printf ("ast_get_type(): This node must be an EXPRNODE!\n");
       return 0;
     }
-  return T->NodeOpType;
+  return tree->operation_type;
 }
 
 int
-IntVal (tree T)
+ast_get_data (ast* tree)
 {
-  if (T->NodeKind == EXPRNode)
+  if (tree->node_type == EXPRNODE)
     {
-      printf ("IntVal(): This node must be a leaf node!\n");
+      printf ("ast_get_data(): This node must be a leaf node!\n");
       return -1;
     }
-  return T->IntVal;
-}
-
-int
-IsNull (tree T)
-{
-  return T->NodeKind == DUMMYNode;
+  return tree->data;
 }
 
 void
-SetNode (tree Target, tree Source)
+ast_assign (ast* tree, ast* other)
 {
-  Target->NodeKind = Source->NodeKind;
-  if (Target->NodeKind != EXPRNode)
+  tree->node_type = other->node_type;
+  if (tree->node_type != EXPRNODE)
     {
-      Target->IntVal = Source->IntVal;
-      Target->LeftC = NullExp ();
-      Target->RightC = NullEx p();
+      tree->data = other->data;
+      tree->left = NULL;
+      tree->right = NULL;
     }
   else
     {
-      Target->NodeOpType = Source->NodeOpType;
-      Target->LeftC = Source->LeftC;
-      Target->RightC = Source->RightC;
+      tree->operation_type = other->operation_type;
+      tree->left = other->left;
+      tree->right = other->right;
     }
 }
 
 void
-SetNodeOp (tree T, int Op)
+ast_set_operation (ast* tree, int operation)
 {
-  if (T->NodeKind != EXPRNode)
+  if (tree->node_type != EXPRNODE)
     {
-      printf ("SetNodeOp(): This node must be an EXPRNode!\n");
+      printf ("ast_set_operation(): This node must be an EXPRNODE!\n");
     }
   else
     {
-      T->NodeOpType = Op;
+      tree->operation_type = operation;
     }
 }
 
 void
-SetLeftTreeOp (tree T, int Op)
+ast_set_left_subtree_operation (ast* tree, int operation)
 {
-  tree p;
+  ast* p;
 
-  p = T;
+  p = tree;
   do
     {
-      SetNodeOp (p, Op);
-      p = LeftChild (p);
+      ast_set_operation (p, operation);
+      p = ast_get_left (p);
     }
-  while (!IsNull (p));
+  while (p != NULL);
 }
 
 void
-SetRightTreeOp (tree T, int Op)
+ast_set_right_subtree_operation (ast* tree, int operation)
 {
-  tree  p;
+  ast*  p;
 
-  p = T;
+  p = tree;
   do
     {
-      SetNodeOp (p, Op);
-      p = RightChild (p);
+      ast_set_operation (p, operation);
+      p = ast_get_right (p);
     }
-  while (!IsNull (p));
+  while (p != NULL);
 }
 
 void
-SetLeftChild (tree T, tree NewC)
+ast_set_left_subtree (ast* tree, ast* l)
 {
-  if (T->NodeKind != EXPRNode)
+  if (tree->node_type != EXPRNODE)
     {
-      printf ("SetLeftChild(): This node must be an EXPRNode!\n");
+      printf ("ast_set_left_subtree(): This node must be an EXPRNODE!\n");
     }
   else
     {
-      T->LeftC = NewC;
+      tree->left = l;
     }
 }
 
 void
-SetRightChild (tree T, tree NewC)
+ast_set_right_subtree (ast* tree, ast* r)
 {
-  if (T->NodeKind != EXPRNode)
+  if (tree->node_type != EXPRNODE)
     {
-      printf ("SetRightChild(): This node must be an EXPRNode!\n");
+      printf ("ast_set_right_subtree(): This node must be an EXPRNODE!\n");
     }
   else
     {
-      T->RightC = NewC;
+      tree->right = r;
     }
 }
-
-/*
- * This is syntax tree printer, "treelst" is the output file  pointer.
- *
- * Call printtree with the root node pointer and the depth level.
- * The depth level can be 0 if it is not desired to indent the root.
- *
- * WRITING "getname()" AND "getstring()" IS YOUR RESPONSIBILITY!!!
- */
-
-extern FILE *treelst;
 
 char* opnodenames[] =
   {
-    "ProgramOp", "BodyOp", "DeclOp", "CommaOp", "ArrayTypeOp", "TypeIdOp",
-    "BoundOp", "RecompOp",
-    "ToOp", "DownToOp", "ConstantIdOp", "ProceOp", "FuncOp",
-    "HeadOp", "RArgTypeOp", "VargTypeOp", "StmtOp", "IfElseOp",
-    "LoopOp", "SpecOp", "RoutineCallOp", "AssignOp", "ReturnOp",
-    "AddOp", "SubOp", "MultOp", "DivOp",
-    "LTOp", "GTOp", "EQOp", "NEOp", "LEOp", "GEOp", "AndOp", "OrOp",
-    "UnaryNegOp", "NotOp", "VarOp", "SelectOp", "IndexOp", "FieldOp",
-    "SubrangeOp", "ExitOp", "ClassOp", "MethodOp", "ClassDefOp"
+    "PROGRAMOP", "BODYOP", "DECLOP", "COMMAOP", "ARRAYTYPEOP", "TYPEIDOP",
+    "BOUNDOP", "RECOMPOP",
+    "TOOP", "DOWNTOOP", "CONSTANTIDOP", "PROCEOP", "FUNCOP",
+    "HEADOP", "RARGTYPEOP", "VARGTYPEOP", "STMTOP", "IFELSEOP",
+    "LOOPOP", "SPECOP", "ROUTINECALLOP", "ASSIGNOP", "RETURNOP",
+    "ADDOP", "SUBOP", "MULTOP", "DIVOP",
+    "LTOP", "GTOP", "EQOP", "NEOP", "LEOP", "GEOP", "ANDOP", "OROP",
+    "UNARYNEGOP", "NOTOP", "VAROP", "SELECTOP", "INDEXOP", "FIELDOP",
+    "SUBRANGEOP", "EXITOP", "CLASSOP", "METHODOP", "CLASSDEFOP"
   };
 
 static int crosses[162];
 
-void
+static void
 indent (int x)
 {
   int i;
   for (i = 0; i < x; i++)
     {
-      fprintf (treelst,"%s", crosses [i]? "| " : "  ");
+      printf ("%s", crosses[i] ? "| " : "  ");
     }
 
-  fprintf (treelst,"%s", x ? "+-" : "R-");
+  printf ("%s", x ? "+-" : "R-");
 
   if (x)
     {
@@ -279,13 +264,13 @@ indent (int x)
     }
 }
 
-void
-zerocrosses ()
+static void
+zerocrosses (void)
 {
   int i;
   for (i = 0; i < 162; i++)
     {
-      crosses [i] = 0;
+      crosses[i] = 0;
     }
 }
 
@@ -295,113 +280,109 @@ extern char strg_tbl[];
  * @brief Return ID name or String.
  *
  * @param[in] i The index of the string table (passed through yylval).
+ *
+ * @todo Replace this with my version.
  */
 char*
 getname (int i)
 {
-  /* Return string table indexed at i. */
   return strg_tbl + i;
 }
 
-char*
-getstring (int i)
-{
-  /* Return string table indexed at i. */
-  return strg_tbl + i;
-}
-
-void
-printtree (tree nd, int depth)
+static void
+ast_print2 (ast* tree, int depth)
 {
   int id;
-  int indx;
+  int index;
 
   if (!depth)
     {
       zerocrosses ();
-      fprintf (treelst,"************* SYNTAX TREE PRINTOUT ***********\n\n");
+      printf ("************* SYNTAX TREE PRINTOUT ***********\n\n");
     }
-  if (IsNull (nd))
+  if (tree == NULL)
     {
       indent (depth);
-      fprintf (treelst,"[DUMMYnode]\n");
+      printf ("[DUMMYNODE]\n");
       return;
     }
-  if (nd->NodeKind == EXPRNode)
+  if (tree->node_type == EXPRNODE)
     {
-      printtree (RightChild (nd), depth + 1);
+      ast_print (ast_get_right (tree), depth + 1);
     }
 
   indent (depth);
 
-  switch (nd->NodeKind)
+  switch (tree->node_type)
     {
-    case IDNode:
-      indx = IntVal (nd);
-      if (indx >= 0)
+    case IDNODE:
+      index = ast_get_data (tree);
+      if (index >= 0)
         {
-          /* GetAttr (indx, NAME_ATTR); */
-          id = indx;
-          fprintf (treelst, "[IDNode,%d,\"%s\"]\n", IntVal (nd),
-                   getname (id));
+          id = index;
+          printf ("[IDNODE,%d,\"%s\"]\n", ast_get_data (tree), getname (id));
         }
       else
         {
-          fprintf (treelst, "[IDNode,%d,\"%s\"]\n", indx, "err");
+          printf ("[IDNODE,%d,\"%s\"]\n", index, "err");
         }
       break;
 
-    case STNode:
-      indx = IntVal (nd);
-      if (indx > 0)
+    case STNODE:
+      index = ast_get_data (tree);
+      if (index > 0)
         {
-          /* GetAttr (indx, NAME_ATTR); */
-          id = indx;
-          fprintf (treelst, "[STNode,%d,\"%s\"]\n", IntVal (nd),
-                   getname (id));
+          id = index;
+          printf ("[STNODE,%d,\"%s\"]\n", ast_get_data (tree), getname (id));
         }
       else
         {
-          fprintf (treelst, "[IDNode,%d,\"%s\"]\n", indx, "err");
+          printf ("[IDNODE,%d,\"%s\"]\n", index, "err");
         }
       break;
 
-    case INTEGERTNode:
-      fprintf (treelst, "[INTEGERTNode]\n");
+    case INTEGERTNODE:
+      printf ("[INTEGERTNODE]\n");
       break;
 
-    case NUMNode:
-      fprintf (treelst, "[NUMNode,%d]\n", IntVal (nd));
+    case NUMNODE:
+      printf ("[NUMNODE,%d]\n", ast_get_data (tree));
       break;
 
-    case CHARNode:
-      if (isprint (IntVal (nd)))
+    case CHARNODE:
+      if (isprint (ast_get_data (tree)))
         {
-          fprintf (treelst, "[CHARNode,%d,\'%c\']\n", IntVal (nd),
-                   IntVal (nd));
+          printf ("[CHARNODE,%d,\'%c\']\n", ast_get_data (tree),
+                  ast_get_data (tree));
         }
       else
         {
-          fprintf (treelst,"[CHARNode,%d,\'\\%o\']\n", IntVal (nd),
-                   IntVal (nd));
+          printf ("[CHARNODE,%d,\'\\%o\']\n", ast_get_data (tree),
+                  ast_get_data (tree));
         }
       break;
 
-    case STRINGNode:
-      fprintf (treelst,"[STRINGNode,%d,\"%s\"]\n", IntVal (nd),
-               getstring (IntVal (nd)));
+    case STRINGNODE:
+      printf ("[STRINGNODE,%d,\"%s\"]\n", ast_get_data (tree),
+              getname (ast_get_data (tree)));
       break;
 
-    case EXPRNode:
-      fprintf (treelst, "[%s]\n", opnodenames[NodeOp (nd) - ProgramOp]);
+    case EXPRNODE:
+      printf ("[%s]\n", opnodenames[ast_get_type (tree) - PROGRAMOP]);
       break;
 
     default:
-      fprintf (treelst, "INVALID!!!\n");
+      printf ("INVALID!!!\n");
       break;
     }
-  if (nd->NodeKind == EXPRNode)
+  if (tree->node_type == EXPRNODE)
     {
-      printtree (LeftChild (nd), depth + 1);
+      ast_print (ast_get_left (tree), depth + 1);
     }
+}
+
+void
+ast_print (ast* tree)
+{
+  ast_print2 (tree, 0);
 }
