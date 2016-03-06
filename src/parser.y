@@ -1,11 +1,14 @@
 %file-prefix "parser"
 %defines "parser.h"
 
+%code requires
+{
+  %include <ast.h>
+}
+
 %{
   #include <stdio.h>
   #include <stdlib.h>
-
-  #include <ast.h>
 %}
 
 %token <constant> AND
@@ -51,6 +54,29 @@
 
 %type <tree> PROGRAM
 %type <tree> CLASS_DECLARATION
+%type <tree> CLASS_BODY
+%type <tree> DECLARATIONS
+%type <tree> VARIABLE_DECLARATION
+%type <tree> VARIABLE_DECLARATION_ID
+%type <tree> VARIABLE_INITIALIZER
+%type <tree> ARRAY_INITALIZER
+%type <tree> ARRAY_CREATION_EXPRESSION
+%type <tree> METHOD_DECLARATION
+%type <tree> FORMAL_PARAMETER_LIST
+%type <tree> BLOCK
+%type <tree> TYPE
+%type <tree> STATEMENT_LIST
+%type <tree> STATEMENT
+%type <tree> ASSIGNMENT_STATEMENT
+%type <tree> METHOD_CALL_STATEMENT
+%type <tree> RETURN_STATEMENT
+%type <tree> IF_STATEMENT
+%type <tree> WHILE_STATEMENT
+%type <tree> EXPRESSION
+%type <tree> SIMPLE_EXPRESSION
+%type <tree> TERM
+%type <tree> FACTOR
+%type <tree> UNSIGNED_CONSTANT
 %type <tree> VARIABLE
 
 %%
