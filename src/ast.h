@@ -82,6 +82,9 @@ typedef struct ast ast;
 /** The root node for our ast. */
 extern ast root;
 
+/** The type. */
+extern ast type;
+
 /**
  * @brief YYSTYPE.
  */

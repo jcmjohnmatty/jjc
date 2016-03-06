@@ -3,7 +3,7 @@
 
 %code requires
 {
-  %include <ast.h>
+  #include <ast.h>
 }
 
 %{
@@ -81,147 +81,251 @@
 
 %%
 
-PROGRAM : PROGRAM ID SEMI CLASS_DECLARATION_LIST
-          {
-            $$ = ast_new (PROGRAMOP,
-                          $4,
-                          ast_make_leaf (IDNODE, $2));
-            printtree ($$, 0);
-          }
-  ;
-/**
- * @todo What is `CLASS'?
- */
+PROGRAM
+: PROGRAM ID SEMI CLASS_DECLARATION_LIST
+{
+  $$ = ast_new (PROGRAMOP,
+                $4,
+                ast_make_leaf (IDNODE, $2));
+  printtree ($$, 0);
+}
+;
 
-CLASS_DECLARATION_LIST : CLASS_DECLARATION
-                         {
-                           $$ = $1;
-                         }
-                       | CLASS_DECLARATION_LIST CLASS_DECLARATION
-                         {
-                           ast* t = ast_make_leaf (CLASSOP, NULL, $2);
-                           $$ = ast_set_left_subtree ($1,
-                                                      t);
-                         }
-  ;
+CLASS_DECLARATION_LIST
+: CLASS_DECLARATION
+{
+  $$ = $1;
+}
+| CLASS_DECLARATION_LIST CLASS_DECLARATION
+{
+  ast* t = ast_make_leaf (CLASSOP, NULL, $2);
+  $$ = ast_set_left_subtree ($1, t);
+}
+;
 
-CLASS_DECLARATION : CLASS ID CLASS_BODY
-                    {
-                      $$  = ast_new (CLASSDEFOP,
-                                     $3,
-                                     ast_make_leaf (IDNODE, $2));
-                    }
-  ;
+CLASS_DECLARATION
+: CLASS ID CLASS_BODY
+{
+  $$  = ast_new (CLASSDEFOP, $3, ast_make_leaf (IDNODE, $2));
+}
+;
 
-CLASS_BODY : RBRACE DECLARATION_LIST METHOD_DECLARATION_LIST LBRACE
-             {
-               if ($3 == NULL && $2 == NULL)
-                 {
-                   $$ = NULL;
-                 }
-               else
-                 {
-                   $$ = ast_new (BODYOP, $2, $3);
-                 }
-             }
+CLASS_BODY
+: RBRACE DECLARATION_LIST METHOD_DECLARATION_LIST LBRACE
+{
+  if ($3 == NULL && $2 == NULL)
+    {
+      $$ = NULL;
+    }
+  else
+    {
+      $$ = ast_new (BODYOP, $2, $3);
+    }
+}
   ;
 
-DECLARATION_LIST : /* empty */
-                   {
-                     $$ = NULL;
-                   }
-                 | FIELD_DECLARATION_LIST
-                   {
-                     $$ = ast_make_leaf (BODYOP, NULL, $1);
-                   }
-                 | DECLARATION_LIST FIELD_DECLARATION_LIST
-                   {
-                     $$ = ast_make_leaf (BODYOP, NULL, NULL);
-                     $$ = ast_set_right_subtree ($$, $2);
-                     if ($1 != NULL)
-                       {
-                         $$ = ast_set_left_subtree ($1, $$);
-                       }
-                   }
-  ;
+DECLARATION_LIST
+: /* empty */
+{
+  $$ = NULL;
+}
+| FIELD_DECLARATION_LIST
+{
+  $$ = ast_new (BODYOP, NULL, $1);
+}
+| DECLARATION_LIST FIELD_DECLARATION_LIST
+{
+  $$ = ast_new (BODYOP, NULL, NULL);
+  $$ = ast_set_right_subtree ($$, $2);
+  if ($1 != NULL)
+    {
+      $$ = ast_set_left_subtree ($1, $$);
+    }
+}
+;
 
-FIELD_DECLARATION_LIST : VARIABLE_DECLARATION_OR_INITIALIZATION_STATEMENT
-                         {
-                           $$ = ast_make_leaf (DECLOP, NULL, $1);
-                         }
-                       | FIELD_DECLARATION_LIST VARIABLE_DECLARATION_OR_INITIALIZATION_STATEMENT
-                         {
-                           $$ = ast_make_leaf (DECLOP, NULL, NULL);
-                           $$ = ast_set_right_subtree ($$, $2);
-                           if ($1 != NULL)
-                             {
-                               $$ = ast_set_left_subtree ($1, $$);
-                             }
-                         }
-  ;
+FIELD_DECLARATION_LIST
+: VARIABLE_DECLARATION_OR_INITIALIZATION_STATEMENT
+{
+  $$ = ast_new (DECLOP, NULL, $1);
+}
+| FIELD_DECLARATION_LIST VARIABLE_DECLARATION_OR_INITIALIZATION_STATEMENT
+{
+  $$ = ast_new (DECLOP, NULL, NULL);
+  $$ = ast_set_right_subtree ($$, $2);
+  if ($1 != NULL)
+    {
+      $$ = ast_set_left_subtree ($1, $$);
+    }
+}
+;
 
 
-VARIABLE_DECLARATION_OR_INITIALIZATION_STATEMENT : TYPE VARIABLE_DECLARATION_OR_INITIALIZATION_LIST SEMI :
-  ;
+VARIABLE_DECLARATION_OR_INITIALIZATION_STATEMENT
+: TYPE VARIABLE_DECLARATION_OR_INITIALIZATION_LIST SEMI
+{
+  type = $1;
+  $$ = $2;
+}
+;
 
-VARIABLE_DECLARATION_OR_INITIALIZATION_LIST : VARIABLE_DECLARATION_OR_INITIALIZATION
-                                            | VARIABLE_DECLARATION_OR_INITIALIZATION COMMA VARIABLE_DECLARATION_OR_INITIALIZATION_LIST
-  ;
+VARIABLE_DECLARATION_OR_INITIALIZATION_LIST
 
-VARIABLE_DECLARATION_OR_INITIALIZATION : VARIABLE_DECLARATION_ID
-                                       | VARIABLE_INITIALIZATION
-  ;
+: VARIABLE_DECLARATION_OR_INITIALIZATION
+{
+  $$ = $1;
+}
+| VARIABLE_DECLARATION_OR_INITIALIZATION COMMA VARIABLE_DECLARATION_OR_INITIALIZATION_LIST
+{
+  $$ = ast_new (DECLOP, NULL, NULL);
+  $$ = ast_set_right_subtree ($$, $1);
+  if ($3 != NULL)
+    {
+      $$ = ast_set_left_subtree ($3, $$);
+    }
+}
+;
 
-VARIABLE_DECLARATION_ID : VARIABLE_DECLARATION_LIST
-                       {
-                       }
-  ;
+VARIABLE_DECLARATION_OR_INITIALIZATION
+: VARIABLE_DECLARATION_ID
+{
+  $$ = ast_new (COMMAOP, $1, ast_new (COMMAOP, type, NULL));
+}
+| VARIABLE_INITIALIZATION
+{
+  $$ = $1;
+}
+;
+
+VARIABLE_DECLARATION_ID
+: ID
+{
+  $$ = ast_make_leaf (IDNODE, $1);
+}
+| ID LBRAC RBRAC
+{
+  $$ = ast_make_leaf (IDNODE, $1);
+}
+;
 
 VARIABLE_INITIALIZATION
-  ;
+: VARIABLE_DECLARATION_ID EQUAL VARIABLE_INITALIZER
+{
+  $$ = ast_new (COMMAOP, $1, ast_new (COMMAOP, type, $3));
+}
+;
 
-METHOD_DECLARATION_LIST : /* empty */
-                          {
-                            $$ = NULL;
-                          }
-                        | METHOD_DECLARATION
-                          {
-                            $$ = ast_make_leaf (BODYOP, NULL, $1);
-                          }
-                        | METHOD_DECLARATION_LIST METHOD_DECLARATION
-                          {
-                            $$ = ast_make_leaf (BODYOP, NULL, NULL);
-                            $$ = ast_set_right_subtree ($$, $2);
-                            if ($1 != NULL)
-                              {
-                                $$ = ast_set_left_subtree ($1, $$);
-                              }
-                          }
-  ;
+VARIABLE_INITALIZER
+: EXPRESSION
+{
+  $$ = $1;
+}
+| ARRAY_INITALIZER
+{
+  $$ = $1;
+}
+| ARRAY_CREATION_EXPRESSION
+{
+  $$ = $1;
+}
+;
 
-METHOD_DECLARATION :
-  ;
+ARRAY_INITALIZER
+: LBRACE VARIABLE_INITALIZER_LIST RBRACE
+{
+  $$ = ast_new (ARRAYTYPEOP, $2, type);
+}
+;
 
-COMPARISON_OPERATOR : LT
-                    | LE
-                    | EQ
-                    | NE
-                    | GE
-                    | GT
-  ;
+VARIABLE_INITALIZER_LIST
+: VARIABLE_INITALIZER
+{
+  $$ = ast_new (COMMAOP, NULL, $1);
+}
+| VARIABLE_INITALIZER_LIST VARIABLE_INITALIZER
+{
+  $$ = ast_new (COMMAOP, NULL, NULL);
+  $$ = ast_set_right_subtree ($$, $2);
+  if ($1 != NULL)
+    {
+      $$ = ast_set_left_subtree ($1, $$);
+    }
+}
+;
 
-EXPRESSION : SIMPLE_EXPRESSION
-             {
-               $$ = $1;
-             }
-           | SIMPLE_EXPRESSION COMPARISON_OPERATOR SIMPLE_EXPRESSION
-             {
-               ast_set_left_subtree ($1, $2);
-               $$ = ast_set_right_subtree ($3, $2);
-             }
-  ;
+ARRAY_CREATION_EXPRESSION
+: INT EXPRESSION_BRACKET_LIST
+{
+  $$ = ast_new (ARRAYTYPEOP, $2, ast_make_leaf (INTEGERTNODE, $1));
+}
+;
 
-SIMPLE_EXPRESSION :
-  ;
+EXPRESSION_BRACKET_LIST
+: RBRAC EXPRESSION LBRAC
+{
+  $$ = ast_new (COMMAOP, NULL, $2);
+}
+| EXPRESSION_LIST RBRAC EXPRESSION LBRAC
+{
+  $$ = ast_new (COMMAOP, NULL, NULL);
+  $$ = ast_set_right_subtree ($$, $3);
+  if ($1 != NULL)
+    {
+      $$ = ast_set_left_subtree ($1, $$);
+    }
+}
+
+METHOD_DECLARATION_LIST
+: /* empty */
+{
+  $$ = NULL;
+}
+| METHOD_DECLARATION
+{
+  $$ = ast_new (BODYOP, NULL, $1);
+}
+| METHOD_DECLARATION_LIST METHOD_DECLARATION
+{
+  $$ = ast_new (BODYOP, NULL, NULL);
+  $$ = ast_set_right_subtree ($$, $2);
+  if ($1 != NULL)
+    {
+      $$ = ast_set_left_subtree ($1, $$);
+    }
+}
+;
+
+METHOD_DECLARATION
+:
+{
+}
+;
+
+COMPARISON_OPERATOR
+: LT
+| LE
+| EQ
+| NE
+| GE
+| GT
+;
+
+EXPRESSION
+: SIMPLE_EXPRESSION
+{
+  $$ = $1;
+}
+| SIMPLE_EXPRESSION COMPARISON_OPERATOR SIMPLE_EXPRESSION
+{
+  ast_set_left_subtree ($1, $2);
+  $$ = ast_set_right_subtree ($3, $2);
+}
+;
+
+SIMPLE_EXPRESSION
+:
+{
+}
+;
 
 %%

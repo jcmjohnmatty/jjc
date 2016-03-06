@@ -5,6 +5,7 @@
 
 ast dummy = { DUMMYNODE, 0, 0, 0, 0 };
 ast* root;
+ast* type = NULL;
 
 ast*
 ast_null (void)
