@@ -319,12 +319,68 @@ METHOD_DECLARATION
 ;
 
 FORMAL_PARAMETER_LIST
+: PARTIAL_PARAMETER_LIST
+{
+  $$ = ast_new (SPECOP, $1, method_declaration_type);
+}
+| FORMAL_PARAMETER_LIST SEMI PARTIAL_PARAMETER_LIST
+{
+  $$ = ast_set_right_subtree ($1, $3);
+}
+;
+
+IDENTIFIER_LIST
+: ID
+{
+  /** @todo Is this duplication right/required? */
+  ast* id_node = ast_make_leaf (IDNODE, $1);
+  $$ = ast_new (COMMAOP, id_node $1);
+  /**
+   * @todo Whether to use RARGTYPEOP or VARGTYPEOP is ambiguous based on
+   *       the description we were given.
+   */
+  $$ = ast_new (RARGTYPEOP, $$, NULL);
+}
+: ID_LIST COMMA ID
+{
+  /** @todo Is this duplication right/required? */
+  ast* id_node = ast_make_leaf (IDNODE, $3);
+  ast* third_id_node = ast_new (COMMAOP, id_node $3);
+  /**
+   * @todo Whether to use RARGTYPEOP or VARGTYPEOP is ambiguous based on
+   *       the description we were given.
+   */
+  third_id_node = ast_new (RARGTYPEOP, third_id_node, NULL);
+  $$ = ast_set_right_subtree ($1, third_id_node);
+}
+;
+;
+
+PARTIAL_PARAMETER_LIST
+: VAL INT IDENTIFIER_LIST
+{
+  $$ = $3;
+}
+| INT IDENTIFIER_LIST
+{
+  $$ = $2;
+}
+;
+
+BLOCK
+: DECLARATION_LIST STATEMENT_LIST
+{
+  $$ = ast_new ($1, $2);
+}
+;
+
+TYPE
 :
 {
 }
 ;
 
-BLOCK
+STATEMENT_LIST
 :
 {
 }
