@@ -138,164 +138,164 @@ main (int argc, char* argv[]) {
 
           switch (token)
             {
-            case ANDnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "ANDnum")
+            case AND:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "AND")
                 break;
 
-            case ASSGNnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "ASSGNnum")
+            case ASSGN:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "ASSGN")
                 break;
 
-            case DECLARATIONnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "DECLARATIONnum")
+            case DECLARATION:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "DECLARATION")
                 break;
 
-            case DOTnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "DOTnum")
+            case DOT:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "DOT")
                 break;
 
-            case ENDDECLARATIONnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "ENDDECLARATIONnum")
+            case ENDDECLARATION:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "ENDDECLARATION")
                 break;
 
-            case EQUALnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "EQUALnum")
+            case EQUAL:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "EQUAL")
                 break;
 
-            case GTnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "GTnum")
+            case GT:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "GT")
                 break;
 
-            case IDnum:
-              PRINT_STBL_ROWIY(yyline, yycolumn, "IDnum", yylval)
+            case ID:
+              PRINT_STBL_ROWIY(yyline, yycolumn, "ID", yylval)
                 break;
 
-            case INTnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "INDnum")
+            case INT:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "IND")
                 break;
 
-            case LBRACnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "LBRACnum")
+            case LBRAC:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "LBRAC")
                 break;
 
-            case LPARENnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "LPARENnum")
+            case LPAREN:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "LPAREN")
                 break;
 
-            case METHODnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "METHODnum")
+            case METHOD:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "METHOD")
                 break;
 
-            case NEnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "NEnum")
+            case NE:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "NE")
                 break;
 
-            case ORnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "ORnum")
+            case OR:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "OR")
                 break;
 
-            case PROGRAMnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "PROGRAMnum")
+            case PROGRAM:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "PROGRAM")
                 break;
 
-            case RBRACnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "RBRACnum")
+            case RBRAC:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "RBRAC")
                 break;
 
-            case RPARENnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "RPARENnum")
+            case RPAREN:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "RPAREN")
                 break;
 
-            case SEMInum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "SEMInum")
+            case SEMI:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "SEMI")
                 break;
 
-            case VALnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "VALnum")
+            case VAL:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "VAL")
                 break;
 
-            case WHILEnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "WHILEnum")
+            case WHILE:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "WHILE")
                 break;
 
-            case CLASSnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "CLASSnum")
+            case CLASS:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "CLASS")
                 break;
 
-            case COMMAnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "COMMAnum")
+            case COMMA:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "COMMA")
                 break;
 
-            case DIVIDEnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "DIVIDEnum")
+            case DIVIDE:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "DIVIDE")
                 break;
 
-            case ELSEnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "ELSEnum")
+            case ELSE:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "ELSE")
                 break;
 
-            case EQnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "EQnum")
+            case EQ:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "EQ")
                 break;
 
-            case GEnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "GEnum")
+            case GE:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "GE")
                 break;
 
-            case ICONSTnum:
-              PRINT_STBL_ROWIY(yyline, yycolumn, "ICONSTnum", yylval)
+            case ICONST:
+              PRINT_STBL_ROWIY(yyline, yycolumn, "ICONST", yylval)
                 break;
 
-            case IFnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "IFnum")
+            case IF:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "IF")
                 break;
 
-            case LBRACEnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "LBRACEnum")
+            case LBRACE:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "LBRACE")
                 break;
 
-            case LEnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "LEnum")
+            case LE:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "LE")
                 break;
 
-            case LTnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "LTnum")
+            case LT:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "LT")
                 break;
 
-            case MINUSnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "MINUSnum")
+            case MINUS:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "MINUS")
                 break;
 
-            case NOTnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "NOTnum")
+            case NOT:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "NOT")
                 break;
 
-            case PLUSnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "PLUSnum")
+            case PLUS:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "PLUS")
                 break;
 
-            case RBRACEnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "RBRACEnum")
+            case RBRACE:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "RBRACE")
                 break;
 
-            case RETURNnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "RETURNnum")
+            case RETURN:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "RETURN")
                 break;
 
-            case SCONSTnum:
-              PRINT_STBL_ROWIY(yyline, yycolumn, "SCONSTnum", yylval)
+            case SCONST:
+              PRINT_STBL_ROWIY(yyline, yycolumn, "SCONST", yylval)
                 break;
 
-            case TIMESnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "TIMESnum")
+            case TIMES:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "TIMES")
                 break;
 
-            case VOIDnum:
-              PRINT_STBL_ROWIN(yyline, yycolumn, "VOIDnum")
+            case VOID:
+              PRINT_STBL_ROWIN(yyline, yycolumn, "VOID")
                 break;
 
-            case EOFnum:
-              PRINT_STBL_ROWS("", "", "EOFnum", "")
+            case EOF:
+              PRINT_STBL_ROWS("", "", "EOF", "")
                 hit_eof = 1;
               break;
             }
