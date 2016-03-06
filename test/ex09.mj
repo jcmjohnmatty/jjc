@@ -1,6 +1,7 @@
+/* -*- Mode:java -*- */
 program x4;
 class Point {
-          
+
 }
 
 class Test {
@@ -9,13 +10,12 @@ class Test {
                int  p=9;
              enddeclarations
         {
-               
+
                 System.println('p=', p);
-               
+
         }
 
       method int main1()
-      { 
+      {
        }
 }
-
