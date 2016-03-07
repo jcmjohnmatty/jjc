@@ -505,14 +505,23 @@ RETURN_STATEMENT
 ;
 
 IF_STATEMENT
-:
+: IF LPAREN EXPRESSION RPAREN STATEMENT_LIST ELSE STATEMENT_LIST
 {
+  ast* exp_statement_pair = ast_new (COMMAOP, $3, $5);
+  ast* if_half = ast_new (IFELSEOP, NULL, exp_statement_pair);
+  $$ = ast_new (IFELSEOP, if_half, $7);
+}
+| IF LPAREN EXPRESSION RPAREN STATEMENT_LIST
+{
+  ast* exp_statement_pair = ast_new (COMMAOP, $3, $5);
+  $$ = ast_new (IFELSEOP, NULL, exp_statement_pair);
 }
 ;
 
 WHILE_STATEMENT
-:
+: WHILE LPAREN EXPRESSION RPAREN STATEMENT_LIST
 {
+  $$ = ast_new (LOOPOP, $3, $5);
 }
 ;
 
