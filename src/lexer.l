@@ -119,50 +119,50 @@ NEWLINE       [\n]
     }
 
   yycolumn += length;
-  return SCONSTnum;
+  return SCONST;
 }
 <INITIAL>{DELIM}            { yycolumn += yyleng; }
 <INITIAL>{NEWLINE}          { yyline++; yycolumn=0; }
-<INITIAL>\&\&               { yycolumn += yyleng; return ANDnum; }
-<INITIAL>\:\=               { yycolumn += yyleng; return ASSGNnum; }
-<INITIAL>declarations       { yycolumn += yyleng; return DECLARATIONnum; }
-<INITIAL>\.                 { yycolumn += yyleng; return DOTnum; }
-<INITIAL>enddeclarations    { yycolumn += yyleng; return ENDDECLARATIONnum; }
-<INITIAL>\=                 { yycolumn += yyleng; return EQUALnum; }
-<INITIAL>\>                 { yycolumn += yyleng; return GTnum; }
-<INITIAL>int                { yycolumn += yyleng; return INTnum; }
-<INITIAL>\[                 { yycolumn += yyleng; return LBRACnum; }
-<INITIAL>\(                 { yycolumn += yyleng; return LPARENnum; }
-<INITIAL>method             { yycolumn += yyleng; return METHODnum; }
-<INITIAL>\!\=               { yycolumn += yyleng; return NEnum; }
-<INITIAL>\|\|               { yycolumn += yyleng; return ORnum; }
-<INITIAL>program            { yycolumn += yyleng; return PROGRAMnum; }
-<INITIAL>\]                 { yycolumn += yyleng; return RBRACnum; }
-<INITIAL>\)                 { yycolumn += yyleng; return RPARENnum; }
-<INITIAL>\;                 { yycolumn += yyleng; return SEMInum; }
-<INITIAL>val                { yycolumn += yyleng; return VALnum; }
-<INITIAL>while              { yycolumn += yyleng; return WHILEnum; }
-<INITIAL>class              { yycolumn += yyleng; return CLASSnum; }
-<INITIAL>\,                 { yycolumn += yyleng; return COMMAnum; }
-<INITIAL>\/                 { yycolumn += yyleng; return DIVIDEnum; }
-<INITIAL>else               { yycolumn += yyleng; return ELSEnum; }
-<INITIAL>\=\=               { yycolumn += yyleng; return EQnum; }
-<INITIAL>\>\=               { yycolumn += yyleng; return GEnum; }
-<INITIAL>\{                 { yycolumn += yyleng; return LBRACEnum; }
-<INITIAL>\<\=               { yycolumn += yyleng; return LEnum; }
-<INITIAL>\<                 { yycolumn += yyleng; return LTnum; }
-<INITIAL>\-                 { yycolumn += yyleng; return MINUSnum; }
-<INITIAL>\!                 { yycolumn += yyleng; return NOTnum; }
-<INITIAL>\+                 { yycolumn += yyleng; return PLUSnum; }
-<INITIAL>\}                 { yycolumn += yyleng; return RBRACEnum; }
-<INITIAL>return             { yycolumn += yyleng; return RETURNnum; }
-<INITIAL>\*                 { yycolumn += yyleng; return TIMESnum; }
-<INITIAL>void               { yycolumn += yyleng; return VOIDnum; }
+<INITIAL>\&\&               { yycolumn += yyleng; return AND; }
+<INITIAL>\:\=               { yycolumn += yyleng; return ASSGN; }
+<INITIAL>declarations       { yycolumn += yyleng; return DECLARATION; }
+<INITIAL>\.                 { yycolumn += yyleng; return DOT; }
+<INITIAL>enddeclarations    { yycolumn += yyleng; return ENDDECLARATION; }
+<INITIAL>\=                 { yycolumn += yyleng; return EQUAL; }
+<INITIAL>\>                 { yycolumn += yyleng; return GT; }
+<INITIAL>int                { yycolumn += yyleng; return INT; }
+<INITIAL>\[                 { yycolumn += yyleng; return LBRAC; }
+<INITIAL>\(                 { yycolumn += yyleng; return LPAREN; }
+<INITIAL>method             { yycolumn += yyleng; return METHOD; }
+<INITIAL>\!\=               { yycolumn += yyleng; return NE; }
+<INITIAL>\|\|               { yycolumn += yyleng; return OR; }
+<INITIAL>program            { yycolumn += yyleng; return PROGRAM; }
+<INITIAL>\]                 { yycolumn += yyleng; return RBRAC; }
+<INITIAL>\)                 { yycolumn += yyleng; return RPAREN; }
+<INITIAL>\;                 { yycolumn += yyleng; return SEMI; }
+<INITIAL>val                { yycolumn += yyleng; return VAL; }
+<INITIAL>while              { yycolumn += yyleng; return WHILE; }
+<INITIAL>class              { yycolumn += yyleng; return CLASS; }
+<INITIAL>\,                 { yycolumn += yyleng; return COMMA; }
+<INITIAL>\/                 { yycolumn += yyleng; return DIVIDE; }
+<INITIAL>else               { yycolumn += yyleng; return ELSE; }
+<INITIAL>\=\=               { yycolumn += yyleng; return EQ; }
+<INITIAL>\>\=               { yycolumn += yyleng; return GE; }
+<INITIAL>\{                 { yycolumn += yyleng; return LBRACE; }
+<INITIAL>\<\=               { yycolumn += yyleng; return LE; }
+<INITIAL>\<                 { yycolumn += yyleng; return LT; }
+<INITIAL>\-                 { yycolumn += yyleng; return MINUS; }
+<INITIAL>\!                 { yycolumn += yyleng; return NOT; }
+<INITIAL>\+                 { yycolumn += yyleng; return PLUS; }
+<INITIAL>\}                 { yycolumn += yyleng; return RBRACE; }
+<INITIAL>return             { yycolumn += yyleng; return RETURN; }
+<INITIAL>\*                 { yycolumn += yyleng; return TIMES; }
+<INITIAL>void               { yycolumn += yyleng; return VOID; }
 
 <INITIAL>{DIGIT}+           {
   yycolumn += yyleng;
   yylval.constant = atoi (yytext);
-  return ICONSTnum;
+  return ICONST;
 }
 <INITIAL>{DIGIT}{ID}        {
   yycolumn += yyleng;
@@ -188,7 +188,7 @@ NEWLINE       [\n]
       yylval.constant = strtbl_get_index (string_table, yytext);
     }
 
-  return IDnum;
+  return ID;
 }
 <INITIAL>\:\=               {
   yycolumn += yyleng;

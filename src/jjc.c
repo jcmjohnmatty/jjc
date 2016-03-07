@@ -9,7 +9,6 @@
 #include <errors.h>
 #include <jjc.h>
 #include <strtbl.h>
-#include <tokens.h>
 
 static const char* version_no = "1.0.0";
 
