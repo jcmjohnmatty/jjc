@@ -108,7 +108,8 @@ strtbl_get_index (strtbl* stbl, char* string)
         {
           return -1;
         }
-      if (strncmp ((char*) (stbl->buffer + start), string, length) == 0)
+      if (strncmp ((char*) (stbl->buffer + start), string, length) == 0
+          && stbl->buffer[start + 1] == '\0')
         {
           return start - 1;
         }
@@ -133,7 +134,9 @@ strtbl_contains_value (strtbl* stbl, char* string)
         {
           return 0;
         }
-      if (strncmp ((char*) (stbl->buffer + start), string, length) == 0)
+      /** @todo Check if start + 1 is in length bounds? */
+      if (strncmp ((char*) (stbl->buffer + start), string, length) == 0
+          && stbl->buffer[start + 1] == '\0')
         {
           return 1;
         }

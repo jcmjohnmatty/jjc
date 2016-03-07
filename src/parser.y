@@ -117,21 +117,14 @@ PROGRAM_DECLARATION
 ;
 
 CLASS_DECLARATION_LIST
-: /* empty */
+: CLASS_DECLARATION
 {
-  $$ = NULL;
+  $$ = ast_new (CLASSOP, NULL, $1);
 }
 | CLASS_DECLARATION_LIST CLASS_DECLARATION
 {
   ast* t = ast_new (CLASSOP, NULL, $2);
-  if ($1 != NULL)
-    {
-      $$ = ast_set_left_subtree ($1, t);
-    }
-  else
-    {
-      $$ = $2;
-    }
+  $$ = ast_set_left_subtree ($1, t);
 }
 ;
 
@@ -145,14 +138,7 @@ CLASS_DECLARATION
 CLASS_BODY
 : LBRACE DECLARATION_LIST METHOD_DECLARATION_LIST RBRACE
 {
-  if ($3 == NULL && $2 == NULL)
-    {
-      $$ = NULL;
-    }
-  else
-    {
-      $$ = ast_new (BODYOP, $2, $3);
-    }
+  $$ = ast_new (BODYOP, $2, $3);
 }
 | LBRACE DECLARATION_LIST RBRACE
 {
@@ -161,6 +147,10 @@ CLASS_BODY
 | LBRACE METHOD_DECLARATION_LIST RBRACE
 {
   $$ = ast_new (BODYOP, NULL, $2);
+}
+| LBRACE RBRACE
+{
+  $$ = NULL;
 }
 ;
 
@@ -336,7 +326,7 @@ METHOD_DECLARATION
 | METHOD TYPE_OR_VOID ID LPAREN RPAREN BLOCK
 {
   ast* head_op = ast_new (HEADOP, ast_make_leaf (IDNODE, $3), NULL);
-  $$ = ast_new (METHODOP, head_op, NULL);
+  $$ = ast_new (METHODOP, head_op, $6);
 }
 ;
 
@@ -396,14 +386,7 @@ BLOCK
 }
 | STATEMENT_LIST
 {
-  if ($1 != NULL)
-    {
-      $$ = ast_new (BODYOP, NULL, $1);
-    }
-  else
-    {
-      $$ = NULL;
-    }
+  $$ = ast_new (BODYOP, NULL, $1);
 }
 ;
 
@@ -469,7 +452,7 @@ STATEMENT_LIST
 ;
 
 STATEMENT_COMMA_LIST
-: STATEMENT
+: STATEMENT SEMI
 {
   $$ = ast_new (STMTOP, NULL, $1);
 }
@@ -564,10 +547,10 @@ EXPRESSION_LIST
 {
   $$ = ast_new (COMMAOP, $1, NULL);
 }
-| EXPRESSION COMMA EXPRESSION_LIST
+| EXPRESSION_LIST COMMA EXPRESSION
 {
-  ast* comma_expression = ast_new (COMMAOP, $1, NULL);
-  $$ = ast_set_right_subtree (comma_expression, $3);
+  ast* comma_node = ast_new (COMMAOP, $3, NULL);
+  $$ = ast_set_right_subtree ($1, comma_node);
 }
 ;
 
@@ -600,6 +583,10 @@ COMPARISON_OPERATOR
 
 EXPRESSION
 : UNSIGNED_CONSTANT
+{
+  $$ = $1;
+}
+| VARIABLE
 {
   $$ = $1;
 }
@@ -748,6 +735,10 @@ VARIABLE
   if ($2 != NULL)
     {
       $$ = ast_new (VAROP, ast_make_leaf (IDNODE, $1), NULL);
+    }
+  else
+    {
+      $$ = ast_make_leaf (IDNODE, $1);
     }
 }
 ;

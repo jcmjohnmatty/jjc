@@ -15,7 +15,7 @@ class Test {
 
         }
 
-      method int main1()
-      {
-       }
+    method int main1()
+    {
+     }
 }
