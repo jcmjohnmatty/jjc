@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include <ast.h>
+#include <strtbl.h>
 
 ast dummy = { DUMMYNODE, 0, 0, 0, 0 };
 ast* root;
@@ -276,26 +277,12 @@ zerocrosses (void)
     }
 }
 
-extern char strg_tbl[];
-
-/**
- * @brief Return ID name or String.
- *
- * @param[in] i The index of the string table (passed through yylval).
- *
- * @todo Replace this with my version.
- */
-char*
-getname (int i)
-{
-  return strg_tbl + i;
-}
-
 static void
 ast_print2 (ast* tree, int depth)
 {
   int id;
   int index;
+  char* s;
 
   if (!depth)
     {
@@ -322,7 +309,8 @@ ast_print2 (ast* tree, int depth)
       if (index >= 0)
         {
           id = index;
-          printf ("[IDNODE,%d,\"%s\"]\n", ast_get_data (tree), getname (id));
+          s = string_table->buffer + string_table->str_indices[index];
+          printf ("[IDNODE,%d,\"%s\"]\n", ast_get_data (tree), s);
         }
       else
         {
@@ -339,8 +327,9 @@ ast_print2 (ast* tree, int depth)
       break;
 
     case STRINGNODE:
-      printf ("[STRINGNODE,%d,\"%s\"]\n", ast_get_data (tree),
-              getname (ast_get_data (tree)));
+      id = ast_get_data (tree);
+      char* s = string_table->buffer + string_table->str_indices[id];
+      printf ("[STRINGNODE,%d,\"%s\"]\n", ast_get_data (tree), s);
       break;
 
     case EXPRNODE:

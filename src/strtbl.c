@@ -21,13 +21,13 @@ void
 strtbl_delete (strtbl* stbl)
 {
   if (stbl->buffer != NULL)
-	{
-	  free (stbl->buffer);
-	}
+    {
+      free (stbl->buffer);
+    }
   if (stbl->str_indices != NULL)
-	{
-	  free (stbl->str_indices);
-	}
+    {
+      free (stbl->str_indices);
+    }
   free (stbl);
 }
 
@@ -35,57 +35,57 @@ int
 strtbl_put (strtbl* stbl, char* string)
 {
   if (stbl == NULL)
-	{
-	  return -1;
-	}
+    {
+      return -1;
+    }
 
   if (stbl->buffer == NULL)
-	{
-	  stbl->buffer = malloc ((strlen (string) + 1) * sizeof (char));
-	  stbl->str_indices = malloc (sizeof (int));
-	}
+    {
+      stbl->buffer = malloc ((strlen (string) + 1) * sizeof (char));
+      stbl->str_indices = malloc (sizeof (int));
+    }
   else
-	{
-	  char* tmp = realloc (stbl->buffer,
-						   (stbl->buffer_length + strlen (string) + 1));
-	  if (tmp == NULL)
-		{
-		  tmp = malloc (stbl->buffer_length + strlen (string) + 1);
-		  int i;
-		  for (i = 0; i < stbl->buffer_length; ++i)
-			{
-			  tmp[i] = stbl->buffer[i];
-			}
-		  free (stbl->buffer);
-		}
-	  stbl->buffer = tmp;
+    {
+      char* tmp = realloc (stbl->buffer,
+                           (stbl->buffer_length + strlen (string) + 1));
+      if (tmp == NULL)
+        {
+          tmp = malloc (stbl->buffer_length + strlen (string) + 1);
+          int i;
+          for (i = 0; i < stbl->buffer_length; ++i)
+            {
+              tmp[i] = stbl->buffer[i];
+            }
+          free (stbl->buffer);
+        }
+      stbl->buffer = tmp;
 
-	  /// @todo This is stupid...
-	  int* tmpi = realloc (stbl->str_indices,
-						   (stbl->n_strings + 1) * sizeof (int));
-	  if (tmpi == NULL)
-		{
-		  tmpi = malloc ((stbl->n_strings + 1) * sizeof (int));
-		  int i;
-		  for (i = 0; i < stbl->n_strings; ++i)
-			{
-			  tmpi[i] = stbl->str_indices[i];
-			}
-		  free (stbl->str_indices);
-		}
-	  stbl->str_indices = tmpi;
-	}
+      /// @todo This is stupid...
+      int* tmpi = realloc (stbl->str_indices,
+                           (stbl->n_strings + 1) * sizeof (int));
+      if (tmpi == NULL)
+        {
+          tmpi = malloc ((stbl->n_strings + 1) * sizeof (int));
+          int i;
+          for (i = 0; i < stbl->n_strings; ++i)
+            {
+              tmpi[i] = stbl->str_indices[i];
+            }
+          free (stbl->str_indices);
+        }
+      stbl->str_indices = tmpi;
+    }
 
   /* Copy the string onto the end. */
   strcpy ((char*) ((size_t) stbl->buffer + stbl->buffer_length + 1), string);
   if (stbl->buffer_length == 0)
-	{
-	  stbl->str_indices[stbl->n_strings] = 0;
-	}
+    {
+      stbl->str_indices[stbl->n_strings] = 0;
+    }
   else
-	{
-	  stbl->str_indices[stbl->n_strings] = stbl->buffer_length;
-	}
+    {
+      stbl->str_indices[stbl->n_strings] = stbl->buffer_length;
+    }
 
   /* Increment counters. */
   ++stbl->n_strings;
@@ -103,21 +103,21 @@ strtbl_get_index (strtbl* stbl, char* string)
   int start = 0;
 
   for (i = 0; i < stbl->n_strings; ++i)
-	{
-	  if (start + length > stbl->buffer_length)
-		{
-		  return -1;
-		}
-	  if (strncmp ((char*) (stbl->buffer + start), string, length) == 0)
-		{
-		  return start - 1;
-		}
-	  while (stbl->buffer[start] != ' ')
-		{
-		  ++start;
-		}
-	  ++start;
-	}
+    {
+      if (start + length > stbl->buffer_length)
+        {
+          return -1;
+        }
+      if (strncmp ((char*) (stbl->buffer + start), string, length) == 0)
+        {
+          return start - 1;
+        }
+      while (stbl->buffer[start] != ' ')
+        {
+          ++start;
+        }
+      ++start;
+    }
   return -1;
 }
 
@@ -128,21 +128,21 @@ strtbl_contains_value (strtbl* stbl, char* string)
   int length = strlen (string);
   int start = 0;
   for (i = 0; i < stbl->n_strings; ++i)
-	{
-	  if (start + length > stbl->buffer_length)
-		{
-		  return 0;
-		}
-	  if (strncmp ((char*) (stbl->buffer + start), string, length) == 0)
-		{
-		  return 1;
-		}
-	  while (stbl->buffer[start] != ' ')
-		{
-		  ++start;
-		}
-	  ++start;
-	}
+    {
+      if (start + length > stbl->buffer_length)
+        {
+          return 0;
+        }
+      if (strncmp ((char*) (stbl->buffer + start), string, length) == 0)
+        {
+          return 1;
+        }
+      while (stbl->buffer[start] != ' ')
+        {
+          ++start;
+        }
+      ++start;
+    }
   return 0;
 }
 
@@ -152,9 +152,16 @@ strtbl_print (strtbl* stbl)
   int i;
   /* Skip the trailing space... */
   for (i = 0; i < stbl->buffer_length; ++i)
-	{
-	  printf ("%c", stbl->buffer[i]);
-	}
+    {
+      if (stbl->buffer[i] == '\0')
+        {
+          printf (" ");
+        }
+      else
+        {
+          printf ("%c", stbl->buffer[i]);
+        }
+    }
   /* Finish with newline... */
   printf ("\n");
 }
