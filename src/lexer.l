@@ -9,11 +9,12 @@
 #include <string.h>
 #include <tokens.h>
 
+#include <ast.h>
 #include <errors.h>
 #include <strtbl.h>
 
 extern int yycolumn, yyline;
-
+extern YYSTYPE yylval;
 %}
 
 DIGIT         [0-9]
@@ -216,3 +217,4 @@ NEWLINE       [\n]
 
 int yyline = 1;
 int yycolumn = 0;
+YYSTYPE yylval;

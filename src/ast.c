@@ -208,31 +208,31 @@ ast_set_right_subtree_operation (ast* tree, int operation)
   while (p != NULL);
 }
 
-void
-ast_set_left_subtree (ast* tree, ast* l)
-{
-  if (tree->node_type != EXPRNODE)
-    {
-      printf ("ast_set_left_subtree(): This node must be an EXPRNODE!\n");
-    }
-  else
-    {
-      tree->left = l;
-    }
-}
+/* void */
+/* ast_set_left_subtree (ast* tree, ast* l) */
+/* { */
+/*   if (tree->node_type != EXPRNODE) */
+/*     { */
+/*       printf ("ast_set_left_subtree(): This node must be an EXPRNODE!\n"); */
+/*     } */
+/*   else */
+/*     { */
+/*       tree->left = l; */
+/*     } */
+/* } */
 
-void
-ast_set_right_subtree (ast* tree, ast* r)
-{
-  if (tree->node_type != EXPRNODE)
-    {
-      printf ("ast_set_right_subtree(): This node must be an EXPRNODE!\n");
-    }
-  else
-    {
-      tree->right = r;
-    }
-}
+/* void */
+/* ast_set_right_subtree (ast* tree, ast* r) */
+/* { */
+/*   if (tree->node_type != EXPRNODE) */
+/*     { */
+/*       printf ("ast_set_right_subtree(): This node must be an EXPRNODE!\n"); */
+/*     } */
+/*   else */
+/*     { */
+/*       tree->right = r; */
+/*     } */
+/* } */
 
 char* opnodenames[] =
   {
@@ -310,7 +310,7 @@ ast_print2 (ast* tree, int depth)
     }
   if (tree->node_type == EXPRNODE)
     {
-      ast_print (ast_get_right (tree), depth + 1);
+      ast_print2 (ast_get_right (tree), depth + 1);
     }
 
   indent (depth);
@@ -330,38 +330,12 @@ ast_print2 (ast* tree, int depth)
         }
       break;
 
-    case STNODE:
-      index = ast_get_data (tree);
-      if (index > 0)
-        {
-          id = index;
-          printf ("[STNODE,%d,\"%s\"]\n", ast_get_data (tree), getname (id));
-        }
-      else
-        {
-          printf ("[IDNODE,%d,\"%s\"]\n", index, "err");
-        }
-      break;
-
     case INTEGERTNODE:
       printf ("[INTEGERTNODE]\n");
       break;
 
     case NUMNODE:
       printf ("[NUMNODE,%d]\n", ast_get_data (tree));
-      break;
-
-    case CHARNODE:
-      if (isprint (ast_get_data (tree)))
-        {
-          printf ("[CHARNODE,%d,\'%c\']\n", ast_get_data (tree),
-                  ast_get_data (tree));
-        }
-      else
-        {
-          printf ("[CHARNODE,%d,\'\\%o\']\n", ast_get_data (tree),
-                  ast_get_data (tree));
-        }
       break;
 
     case STRINGNODE:
@@ -379,7 +353,7 @@ ast_print2 (ast* tree, int depth)
     }
   if (tree->node_type == EXPRNODE)
     {
-      ast_print (ast_get_left (tree), depth + 1);
+      ast_print2 (ast_get_left (tree), depth + 1);
     }
 }
 

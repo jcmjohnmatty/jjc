@@ -1,4 +1,5 @@
 %file-prefix "parser"
+%output "parser.c"
 %defines "parser.h"
 
 %code requires
@@ -10,12 +11,6 @@
   #include <stdio.h>
   #include <stdlib.h>
 %}
-
-%union
-{
-  int constant;
-  ast* tree;
-}
 
 %token <constant> AND
 %token <constant> ASSGN
@@ -56,7 +51,6 @@
 %token <constant> SCONST
 %token <constant> TIMES
 %token <constant> VOID
-%token <constant> EOF
 
 %type <tree> PROGRAM_DECLARATION
 %type <tree> CLASS_DECLARATION_LIST

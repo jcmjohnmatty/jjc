@@ -40,6 +40,5 @@
 #define SCONST             293
 #define TIMES              294
 #define VOID               295
-#define EOF                0
 
 #endif /* __JJC_TOKENS_H_ */

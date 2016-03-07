@@ -24,3 +24,5 @@ aclocal.m4
 ylwrap
 lexer.c
 lexer.h
+parser.c
+parser.h

@@ -83,6 +83,15 @@ extern ast* field_declaration_type;
 extern ast* method_declaration_type;
 
 /**
+ * @brief YYSTYPE
+ */
+typedef union
+{
+  int constant;
+  ast* tree;
+} YYSTYPE;
+
+/**
  * @brief Create a leaf node with a given node_type and data.
  *
  * @param[in] type The new type of the for the <code>ast</code>'s leaf.
@@ -221,23 +230,23 @@ ast_set_left_subtree_operation (ast* T, int operation);
 void
 ast_set_right_subtree_operation (ast* T, int operation);
 
-/**
- * @brief Set an <code>ast</code>'s left subtree.
- *
- * @param[in, out] tree The <code>ast</code> to set the left subtree of.
- * @param[in]      l    The new left subtree for <code>tree</code>.
- */
-void
-ast_set_left_subtree (ast* tree, ast* l);
+/* /\** */
+/*  * @brief Set an <code>ast</code>'s left subtree. */
+/*  * */
+/*  * @param[in, out] tree The <code>ast</code> to set the left subtree of. */
+/*  * @param[in]      l    The new left subtree for <code>tree</code>. */
+/*  *\/ */
+/* void */
+/* ast_set_left_subtree (ast* tree, ast* l); */
 
-/**
- * @brief Set an <code>ast</code>'s right subtree.
- *
- * @param[in, out] tree The <code>ast</code> to set the right subtree of.
- * @param[in]      r    The new right subtree for <code>tree</code>.
- */
-void
-ast_set_right_subtree (ast* tree, ast* r);
+/* /\** */
+/*  * @brief Set an <code>ast</code>'s right subtree. */
+/*  * */
+/*  * @param[in, out] tree The <code>ast</code> to set the right subtree of. */
+/*  * @param[in]      r    The new right subtree for <code>tree</code>. */
+/*  *\/ */
+/* void */
+/* ast_set_right_subtree (ast* tree, ast* r); */
 
 /**
  * @brief Print an ast.
