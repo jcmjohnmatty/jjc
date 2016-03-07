@@ -90,7 +90,7 @@ strtbl_put (strtbl* stbl, char* string)
   /* Increment counters. */
   ++stbl->n_strings;
   stbl->buffer_length += strlen (string) + 1;
-  stbl->buffer[stbl->buffer_length] = ' ';
+  stbl->buffer[stbl->buffer_length] = '\0';
 
   return stbl->str_indices[stbl->n_strings - 1];
 }
@@ -112,7 +112,7 @@ strtbl_get_index (strtbl* stbl, char* string)
         {
           return start - 1;
         }
-      while (stbl->buffer[start] != ' ')
+      while (stbl->buffer[start] != '\0')
         {
           ++start;
         }
@@ -137,7 +137,7 @@ strtbl_contains_value (strtbl* stbl, char* string)
         {
           return 1;
         }
-      while (stbl->buffer[start] != ' ')
+      while (stbl->buffer[start] != '\0')
         {
           ++start;
         }
@@ -153,7 +153,7 @@ strtbl_print (strtbl* stbl)
   /* Skip the trailing space... */
   for (i = 0; i < stbl->buffer_length; ++i)
     {
-      if (stbl->buffer[i] == '\0')
+      if (stbl->buffer[i] == '\0' && i > 0)
         {
           printf (" ");
         }

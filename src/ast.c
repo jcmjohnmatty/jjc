@@ -309,7 +309,7 @@ ast_print2 (ast* tree, int depth)
       if (index >= 0)
         {
           id = index;
-          s = string_table->buffer + string_table->str_indices[index];
+          s = string_table->buffer + index + 1;
           printf ("[IDNODE,%d,\"%s\"]\n", ast_get_data (tree), s);
         }
       else
@@ -328,7 +328,7 @@ ast_print2 (ast* tree, int depth)
 
     case STRINGNODE:
       id = ast_get_data (tree);
-      char* s = string_table->buffer + string_table->str_indices[id];
+      char* s = string_table->buffer + id + 1;
       printf ("[STRINGNODE,%d,\"%s\"]\n", ast_get_data (tree), s);
       break;
 

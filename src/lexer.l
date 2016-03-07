@@ -178,6 +178,7 @@ NEWLINE       [\n]
       yytext[i] = tolower (yytext[i]);
     }
 
+
   if (!strtbl_contains_value (string_table, yytext))
     {
       yylval.constant = strtbl_put (string_table, yytext);
