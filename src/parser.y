@@ -188,6 +188,10 @@ FIELD_DECLARATION_LIST
     {
       $$ = ast_set_left_subtree ($1, $$);
     }
+  else
+    {
+      $$ = $2;
+    }
 }
 ;
 
@@ -202,12 +206,11 @@ VARIABLE_DECLARATION_OR_INITIALIZATION_STATEMENT
 VARIABLE_DECLARATION_OR_INITIALIZATION_LIST
 : VARIABLE_DECLARATION_OR_INITIALIZATION
 {
-  $$ = $1;
+  $$ = ast_new (DECLOP, NULL, $1);
 }
 | VARIABLE_DECLARATION_OR_INITIALIZATION_LIST COMMA VARIABLE_DECLARATION_OR_INITIALIZATION
 {
-  $$ = ast_new (DECLOP, NULL, NULL);
-  $$ = ast_set_right_subtree ($$, $3);
+  $$ = ast_new (DECLOP, NULL, $3);
   $$ = ast_set_left_subtree ($1, $$);
 }
 ;
