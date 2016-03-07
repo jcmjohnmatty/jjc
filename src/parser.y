@@ -5,11 +5,14 @@
 %code requires
 {
   #include <ast.h>
+  #include <errors.h>
 }
 
 %{
   #include <stdio.h>
   #include <stdlib.h>
+
+  extern int yyline, yycolumn;
 %}
 
 %token <constant> AND
@@ -109,7 +112,7 @@ PROGRAM_DECLARATION
   $$ = ast_new (PROGRAMOP,
                 $4,
                 ast_make_leaf (IDNODE, $2));
-  printtree ($$, 0);
+  ast_print ($$);
 }
 ;
 
@@ -120,7 +123,7 @@ CLASS_DECLARATION_LIST
 }
 | CLASS_DECLARATION_LIST CLASS_DECLARATION
 {
-  ast* t = ast_make_leaf (CLASSOP, NULL, $2);
+  ast* t = ast_new (CLASSOP, NULL, $2);
   $$ = ast_set_left_subtree ($1, t);
 }
 ;
@@ -150,10 +153,6 @@ DECLARATION_LIST
 : /* empty */
 {
   $$ = NULL;
-}
-| FIELD_DECLARATION_LIST
-{
-  $$ = ast_new (BODYOP, NULL, $1);
 }
 | DECLARATION_LIST FIELD_DECLARATION_LIST
 {
@@ -294,24 +293,19 @@ EXPRESSION_INDEXING_LIST
 }
 
 METHOD_DECLARATION_LIST
-: /* empty */
+: METHOD_DECLARATION
 {
-  $$ = NULL;
+  $$ = ast_new (BODYOP, NULL, $1);
 }
 | METHOD_DECLARATION_LIST METHOD_DECLARATION
 {
-  $$ = ast_new (BODYOP, NULL, NULL);
-  $$ = ast_set_right_subtree ($$, $2);
-  if ($1 != NULL)
-    {
-      $$ = ast_set_left_subtree ($1, $$);
-    }
+  $$ = ast_new (BODYOP, NULL, $2);
+  $$ = ast_set_left_subtree ($1, $$);
 }
 ;
 
 TYPE_OR_VOID
 : TYPE
-| VOID
 {
   method_declaration_type = $1;
 }
@@ -320,8 +314,8 @@ TYPE_OR_VOID
 METHOD_DECLARATION
 : METHOD TYPE_OR_VOID ID LPAREN FORMAL_PARAMETER_LIST RPAREN BLOCK
 {
-  ast* head_op = ast_new (HEADOP, $3, $4);
-  $$ = ast_new (METHODOP, head_op, $4);
+  ast* head_op = ast_new (HEADOP, ast_make_leaf (IDNODE, $3), $5);
+  $$ = ast_new (METHODOP, head_op, $7);
 }
 ;
 
@@ -341,7 +335,7 @@ ID_LIST
 {
   /** @todo Is this duplication right/required? */
   ast* id_node = ast_make_leaf (IDNODE, $1);
-  $$ = ast_new (COMMAOP, id_node $1);
+  $$ = ast_new (COMMAOP, id_node, ast_make_leaf (INTEGERTNODE, $1));
   /**
    * @todo Whether to use RARGTYPEOP or VARGTYPEOP is ambiguous based on
    *       the description we were given.
@@ -352,7 +346,8 @@ ID_LIST
 {
   /** @todo Is this duplication right/required? */
   ast* id_node = ast_make_leaf (IDNODE, $3);
-  ast* third_id_node = ast_new (COMMAOP, id_node $3);
+  ast* third_id_node = ast_new (COMMAOP, id_node, $1);
+
   /**
    * @todo Whether to use RARGTYPEOP or VARGTYPEOP is ambiguous based on
    *       the description we were given.
@@ -376,7 +371,7 @@ PARTIAL_PARAMETER_LIST
 BLOCK
 : DECLARATION_LIST STATEMENT_LIST
 {
-  $$ = ast_new ($1, $2);
+  $$ = ast_new (BODYOP, $1, $2);
 }
 ;
 
@@ -387,7 +382,7 @@ TYPE
 }
 | INT
 {
-  $$ = ast_new (TYPEOPID, $1, NODE);
+  $$ = ast_new (TYPEIDOP, ast_make_leaf (INTEGERTNODE, $1), NULL);
 }
 | ID_ARR
 {
@@ -404,7 +399,7 @@ ID_ARR
 {
   ast* terminal_node = ast_new (INDEXOP, NULL, NULL);
   ast* indexed_node = ast_new (INDEXOP, NULL, terminal_node);
-  $$ = ast_new (TYPEOPID, ast_make_leaf (IDNODE, $1), indexed_node);
+  $$ = ast_new (TYPEIDOP, ast_make_leaf (IDNODE, $1), indexed_node);
 }
 ;
 
@@ -413,7 +408,7 @@ INT_ARR
 {
   ast* terminal_node = ast_new (INDEXOP, NULL, NULL);
   ast* indexed_node = ast_new (INDEXOP, NULL, terminal_node);
-  $$ = ast_new (TYPEOPID, $1, indexed_node);
+  $$ = ast_new (TYPEIDOP, ast_make_leaf (INTEGERTNODE, $1), indexed_node);
 }
 ;
 
@@ -424,7 +419,7 @@ ID_DOTS
 }
 | ID DOT ID_DOTS
 {
-  ast* id_node = ast_new (TYPEOPID, $1, NULL);
+  ast* id_node = ast_new (TYPEIDOP, ast_make_leaf (INTEGERTNODE, $1), NULL);
   ast* dot_node = ast_new (FIELDOP, $3, NULL);
   $$ = ast_set_right_subtree (id_node, dot_node);
 }
@@ -433,13 +428,13 @@ ID_DOTS
 ID_OR_ID_ARRAY
 : ID
 {
-  $$ = ast_new (TYPEOPID, ast_make_leaf (IDNODE, $1), NULL);
+  $$ = ast_new (TYPEIDOP, ast_make_leaf (IDNODE, $1), NULL);
 }
 | ID LBRAC RBRAC
 {
   ast* terminal_node = ast_new (INDEXOP, NULL, NULL);
   ast* indexed_node = ast_new (INDEXOP, NULL, terminal_node);
-  $$ = ast_new (TYPEOPID, ast_make_leaf (IDNODE, $1), indexed_node);
+  $$ = ast_new (TYPEIDOP, ast_make_leaf (IDNODE, $1), indexed_node);
 }
 ;
 
@@ -539,11 +534,6 @@ EXPRESSION_PAREN_LIST
 | LPAREN EXPRESSION_LIST RPAREN
 {
   $$ = $2;
-  $$ = ast_set_right_subtree ($$, $3);
-  if ($1 != NULL)
-    {
-      $$ = ast_set_left_subtree ($1, $$);
-    }
 }
 
 EXPRESSION_LIST
@@ -633,12 +623,12 @@ BINARY_OPERATOR_TERM_LIST
 }
 | BINARY_OPERATOR_TERM_LIST MINUS TERM
 {
-  ast* subterm = ast_new (SUBOP, NULL, $2);
+  ast* subterm = ast_new (SUBOP, NULL, $3);
   $$ = ast_set_left_subtree ($1, subterm);
 }
 | BINARY_OPERATOR_TERM_LIST OR TERM
 {
-  ast* subterm = ast_new (OROP, NULL, $2);
+  ast* subterm = ast_new (OROP, NULL, $3);
   $$ = ast_set_left_subtree ($1, subterm);
 }
 ;
@@ -717,11 +707,11 @@ FACTOR
 UNSIGNED_CONSTANT
 : ICONST
 {
-  $$ = ast_leaf (INTEGERTNODE, $1);
+  $$ = ast_make_leaf (NUMNODE, $1);
 }
 | SCONST
 {
-  $$ = ast_leaf (STRINGNODE, $1);
+  $$ = ast_make_leaf (STRINGNODE, $1);
 }
 ;
 
@@ -768,8 +758,15 @@ VARIABLE_LIST
 EXPRESSION_BRACKET_LIST
 : LBRAC EXPRESSION_LIST RBRAC
 {
-  $$ = ast_set_right_subtree_operation ($2, INDEXOP);
+  ast_set_right_subtree_operation ($2, INDEXOP);
+  $$ = $2;
 }
 ;
 
 %%
+
+int
+yyerror (char const* s)
+{
+  return error_line_column (yyline, yycolumn, s);
+}
