@@ -375,8 +375,65 @@ BLOCK
 ;
 
 TYPE
-:
+: ID_DOTS
 {
+  $$ = $1;
+}
+| INT
+{
+  $$ = ast_new (TYPEOPID, $1, NODE);
+}
+| ID_ARR
+{
+  $$ = $1;
+}
+| INT_ARR
+{
+  $$ = $1;
+}
+;
+
+ID_ARR
+: ID LBRAC RBRAC
+{
+  ast* terminal_node = ast_new (INDEXOP, NULL, NULL);
+  ast* indexed_node = ast_new (INDEXOP, NULL, terminal_node);
+  $$ = ast_new (TYPEOPID, $1, indexed_node);
+}
+;
+
+INT_ARR
+: INT LBRAC RBRAC
+{
+  ast* terminal_node = ast_new (INDEXOP, NULL, NULL);
+  ast* indexed_node = ast_new (INDEXOP, NULL, terminal_node);
+  $$ = ast_new (TYPEOPID, $1, indexed_node);
+}
+;
+
+ID_DOTS
+: ID_OR_ID_ARRAY
+{
+  $$ = $1;
+}
+| ID DOT ID_DOTS
+{
+  ast* id_node = ast_new (TYPEOPID, $1, NULL);
+  ast* dot_node = ast_new (FIELDOP, $3, NULL);
+  $$ = ast_set_right_subtree (id_node, dot_node);
+}
+;
+
+ID_OR_ID_ARRAY
+: ID
+{
+  $$ = ast_new (TYPEOPID, $1, NULL);
+}
+: ID LBRAC RBRAC
+{
+  ast* terminal_node = ast_new (INDEXOP, NULL, NULL);
+  ast* indexed_node = ast_new (INDEXOP, NULL, terminal_node);
+  $$ = ast_new (TYPEOPID, $1, indexed_node);
 }
 ;
 
