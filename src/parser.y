@@ -554,29 +554,11 @@ EXPRESSION_LIST
 
 COMPARISON_OPERATOR
 : LT
-{
-  $$ = $1;
-}
 | LE
-{
-  $$ = $1;
-}
 | EQ
-{
-  $$ = $1;
-}
 | NE
-{
-  $$ = $1;
-}
 | GE
-{
-  $$ = $1;
-}
 | GT
-{
-  $$ = $1;
-}
 ;
 
 EXPRESSION
@@ -592,8 +574,48 @@ EXPRESSION
 ;
 
 SIMPLE_EXPRESSION
-:
+: PLUS TERM BINARY_OPERATOR_TERM_LIST
 {
+  $$ = ast_set_left_subtree ($3, $2);
+}
+| MINUS TERM BINARY_OPERATOR_TERM_LIST
+{
+  ast* neg_node = ast_new (UNARYNEGOP, $2, NULL);
+  $$ = ast_set_left_subtree ($3, neg_node);
+}
+| TERM BINARY_OPERATOR_TERM_LIST
+{
+  $$ = ast_set_left_subtree ($2, $1);
+}
+;
+
+BINARY_OPERATOR_TERM_LIST
+: PLUS TERM
+{
+  $$ = ast_new (ADDOP, NULL, $2);
+}
+| MINUS TERM
+{
+  $$ = ast_new (ADDOP, NULL, $2);
+}
+| OR TERM
+{
+  $$ = ast_new (ADDOP, NULL, $2);
+}
+| PLUS TERM BINARY_OPERATOR_TERM_LIST
+{
+  ast* subterm = ast_new (ADDOP, NULL, $2);
+  $$ = ast_set_left_subtree (subterm, $3);
+}
+| MINUS TERM BINARY_OPERATOR_TERM_LIST
+{
+  ast* subterm = ast_new (SUBOP, NULL, $2);
+  $$ = ast_set_left_subtree (subterm, $3);
+}
+| OR TERM BINARY_OPERATOR_TERM_LIST
+{
+  ast* subterm = ast_new (OROP, NULL, $2);
+  $$ = ast_set_left_subtree (subterm, $3);
 }
 ;
 
