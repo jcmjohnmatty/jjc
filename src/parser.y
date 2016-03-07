@@ -82,7 +82,6 @@
 %type <tree> BLOCK
 %type <tree> TYPE
 %type <tree> ID_DOTS
-%type <tree> ID_ARR
 %type <tree> INT_ARR
 %type <tree> ID_OR_ID_ARRAY
 %type <tree> STATEMENT_LIST
@@ -155,13 +154,13 @@ DECLARATION_LIST
 {
   $$ = NULL;
 }
-| DECLARATION_LIST FIELD_DECLARATION_LIST
+| DECLARATION DECLARATION_LIST FIELD_DECLARATION_LIST ENDDECLARATION
 {
   $$ = ast_new (BODYOP, NULL, NULL);
-  $$ = ast_set_right_subtree ($$, $2);
+  $$ = ast_set_right_subtree ($$, $3);
   if ($1 != NULL)
     {
-      $$ = ast_set_left_subtree ($1, $$);
+      $$ = ast_set_left_subtree ($2, $$);
     }
 }
 ;
@@ -227,7 +226,7 @@ VARIABLE_DECLARATION_ID
 ;
 
 VARIABLE_INITIALIZATION
-: VARIABLE_DECLARATION_ID EQUAL VARIABLE_INITALIZER
+: VARIABLE_DECLARATION_ID ASSGN VARIABLE_INITALIZER
 {
   $$ = ast_new (COMMAOP, $1, ast_new (COMMAOP, field_declaration_type, $3));
 }
@@ -310,6 +309,10 @@ TYPE_OR_VOID
 {
   method_declaration_type = $1;
 }
+| VOID
+{
+  method_declaration_type = $1;
+}
 ;
 
 METHOD_DECLARATION
@@ -385,22 +388,9 @@ TYPE
 {
   $$ = ast_new (TYPEIDOP, ast_make_leaf (INTEGERTNODE, $1), NULL);
 }
-| ID_ARR
-{
-  $$ = $1;
-}
 | INT_ARR
 {
   $$ = $1;
-}
-;
-
-ID_ARR
-: ID LBRAC RBRAC
-{
-  ast* terminal_node = ast_new (INDEXOP, NULL, NULL);
-  ast* indexed_node = ast_new (INDEXOP, NULL, terminal_node);
-  $$ = ast_new (TYPEIDOP, ast_make_leaf (IDNODE, $1), indexed_node);
 }
 ;
 
@@ -418,11 +408,11 @@ ID_DOTS
 {
   $$ = $1;
 }
-| ID DOT ID_DOTS
+| ID_DOTS DOT ID
 {
-  ast* id_node = ast_new (TYPEIDOP, ast_make_leaf (INTEGERTNODE, $1), NULL);
-  ast* dot_node = ast_new (FIELDOP, $3, NULL);
-  $$ = ast_set_right_subtree (id_node, dot_node);
+  ast* id_node = ast_new (TYPEIDOP, ast_make_leaf (INTEGERTNODE, $3), NULL);
+  ast* dot_node = ast_new (FIELDOP, $1, NULL);
+  $$ = ast_set_right_subtree (dot_node, id_node);
 }
 ;
 

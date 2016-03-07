@@ -140,7 +140,7 @@ print_usage (void)
 "               FILEs as possible.\n"
 "  --verbose    Print verbose information about the compilation of the input\n"
 "               FILEs.\n"
-"  --verbose    Print jjc\'s version and exit.\n"
+"  --version    Print jjc\'s version and exit.\n"
 "\n"
 "To report bugs, please contact John C. Matty <jcmjohnmatty@me.com>.\n");
 }
