@@ -8,8 +8,8 @@ class Test
    int a, b, c=1;
    int[] d;
   enddeclarations
-  /* method int main () */
-  /* { */
+  method int main ()
+  {
 
-  /* } */
+  }
 }

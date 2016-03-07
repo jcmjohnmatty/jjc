@@ -333,6 +333,11 @@ METHOD_DECLARATION
   ast* head_op = ast_new (HEADOP, ast_make_leaf (IDNODE, $3), $5);
   $$ = ast_new (METHODOP, head_op, $7);
 }
+| METHOD TYPE_OR_VOID ID LPAREN RPAREN BLOCK
+{
+  ast* head_op = ast_new (HEADOP, ast_make_leaf (IDNODE, $3), NULL);
+  $$ = ast_new (METHODOP, head_op, NULL);
+}
 ;
 
 FORMAL_PARAMETER_LIST
@@ -388,6 +393,17 @@ BLOCK
 : DECLARATION_LIST STATEMENT_LIST
 {
   $$ = ast_new (BODYOP, $1, $2);
+}
+| STATEMENT_LIST
+{
+  if ($1 != NULL)
+    {
+      $$ = ast_new (BODYOP, NULL, $1);
+    }
+  else
+    {
+      $$ = NULL;
+    }
 }
 ;
 
@@ -445,6 +461,10 @@ STATEMENT_LIST
 : LBRACE STATEMENT_COMMA_LIST RBRACE
 {
   $$ = $2;
+}
+| LBRACE RBRACE
+{
+  $$ = NULL;
 }
 ;
 
