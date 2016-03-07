@@ -12,7 +12,7 @@
 #include <errors.h>
 #include <strtbl.h>
 
-extern int yycolumn, yyline, yylval;
+extern int yycolumn, yyline;
 
 %}
 
@@ -110,11 +110,11 @@ NEWLINE       [\n]
 
   if (!strtbl_contains_value (string_table, yytext))
     {
-      yylval = strtbl_put (string_table, yytext);
+      yylval.constant = strtbl_put (string_table, yytext);
     }
   else
     {
-      yylval = strtbl_get_index (string_table, yytext);
+      yylval.constant = strtbl_get_index (string_table, yytext);
     }
 
   yycolumn += length;
@@ -160,7 +160,7 @@ NEWLINE       [\n]
 
 <INITIAL>{DIGIT}+           {
   yycolumn += yyleng;
-  yylval = atoi (yytext);
+  yylval.constant = atoi (yytext);
   return ICONST;
 }
 <INITIAL>{DIGIT}{ID}        {
@@ -175,16 +175,16 @@ NEWLINE       [\n]
   int i;
   for (i = 0; i < strlen (yytext); ++i)
     {
-      yytext[i] = tolower(yytext[i]);
+      yytext[i] = tolower (yytext[i]);
     }
 
   if (!strtbl_contains_value (string_table, yytext))
     {
-      yylval = strtbl_put (string_table, yytext);
+      yylval.constant = strtbl_put (string_table, yytext);
     }
   else
     {
-      yylval = strtbl_get_index (string_table, yytext);
+      yylval.constant = strtbl_get_index (string_table, yytext);
     }
 
   return ID;
@@ -216,4 +216,3 @@ NEWLINE       [\n]
 
 int yyline = 1;
 int yycolumn = 0;
-int yylval = -1;

@@ -50,14 +50,10 @@
 
 #define IDNODE          200
 #define NUMNODE         201
-#define CHARNODE        202
-#define STRINGNODE      203
-#define DUMMYNODE       204
+#define STRINGNODE      202
+#define DUMMYNODE       203
+#define INTEGERTNODE    204
 #define EXPRNODE        205
-#define INTEGERTNODE    206
-#define CHARTNODE       207
-#define BOOLEANTNODE    208
-#define STNODE          209
 
 /**
  * @brief Syntax tree node struct.

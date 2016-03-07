@@ -254,18 +254,18 @@ VARIABLE_INITALIZER_LIST
 ;
 
 ARRAY_CREATION_EXPRESSION
-: INT EXPRESSION_BRACKET_LIST
+: INT EXPRESSION_INDEXING_LIST
 {
   $$ = ast_new (ARRAYTYPEOP, $2, ast_make_leaf (INTEGERTNODE, $1));
 }
 ;
 
-EXPRESSION_BRACKET_LIST
+EXPRESSION_INDEXING_LIST
 : LBRAC EXPRESSION RBRAC
 {
   $$ = ast_new (COMMAOP, NULL, $2);
 }
-| EXPRESSION_BRACKET_LIST LBRAC EXPRESSION RBRAC
+| EXPRESSION_INDEXING_LIST LBRAC EXPRESSION RBRAC
 {
   $$ = ast_new (COMMAOP, NULL, NULL);
   $$ = ast_set_right_subtree ($$, $3);
@@ -398,7 +398,7 @@ ID_ARR
 {
   ast* terminal_node = ast_new (INDEXOP, NULL, NULL);
   ast* indexed_node = ast_new (INDEXOP, NULL, terminal_node);
-  $$ = ast_new (TYPEOPID, $1, indexed_node);
+  $$ = ast_new (TYPEOPID, ast_make_leaf (IDNODE, $1), indexed_node);
 }
 ;
 
@@ -427,13 +427,13 @@ ID_DOTS
 ID_OR_ID_ARRAY
 : ID
 {
-  $$ = ast_new (TYPEOPID, $1, NULL);
+  $$ = ast_new (TYPEOPID, ast_make_leaf (IDNODE, $1), NULL);
 }
 : ID LBRAC RBRAC
 {
   ast* terminal_node = ast_new (INDEXOP, NULL, NULL);
   ast* indexed_node = ast_new (INDEXOP, NULL, terminal_node);
-  $$ = ast_new (TYPEOPID, $1, indexed_node);
+  $$ = ast_new (TYPEOPID, ast_make_leaf (IDNODE, $1), indexed_node);
 }
 ;
 
@@ -554,11 +554,29 @@ EXPRESSION_LIST
 
 COMPARISON_OPERATOR
 : LT
+{
+  $$ = ast_new (LT, NULL, NULL);
+}
 | LE
+{
+  $$ = ast_new (LE, NULL, NULL);
+}
 | EQ
+{
+  $$ = ast_new (EQ, NULL, NULL);
+}
 | NE
+{
+  $$ = ast_new (NE, NULL, NULL);
+}
 | GE
+{
+  $$ = ast_new (GE, NULL, NULL);
+}
 | GT
+{
+  $$ = ast_new (GT, NULL, NULL);
+}
 ;
 
 EXPRESSION
@@ -568,8 +586,8 @@ EXPRESSION
 }
 | SIMPLE_EXPRESSION COMPARISON_OPERATOR SIMPLE_EXPRESSION
 {
-  ast_set_left_subtree ($1, $2);
-  $$ = ast_set_right_subtree ($3, $2);
+  ast_set_left_subtree ($2, $1);
+  $$ = ast_set_right_subtree ($2, $3);
 }
 ;
 
@@ -596,11 +614,11 @@ BINARY_OPERATOR_TERM_LIST
 }
 | MINUS TERM
 {
-  $$ = ast_new (ADDOP, NULL, $2);
+  $$ = ast_new (SUBOP, NULL, $2);
 }
 | OR TERM
 {
-  $$ = ast_new (ADDOP, NULL, $2);
+  $$ = ast_new (OROP, NULL, $2);
 }
 | PLUS TERM BINARY_OPERATOR_TERM_LIST
 {
@@ -616,6 +634,135 @@ BINARY_OPERATOR_TERM_LIST
 {
   ast* subterm = ast_new (OROP, NULL, $2);
   $$ = ast_set_left_subtree (subterm, $3);
+}
+;
+
+TERM
+: FACTOR BINARY_OPERATOR_FACTOR_LIST
+{
+  if ($2 == NULL)
+    {
+      $$ = $1;
+    }
+  else
+    {
+      $$ = ast_set_right_subtree ($2, $1);
+    }
+}
+;
+
+BINARY_OPERATOR_FACTOR_LIST
+: /* empty */
+{
+  $$ = NULL;
+}
+| TIMES FACTOR
+{
+  $$ = ast_new (MULTOP, $2, NULL);
+}
+| DIVIDE FACTOR
+{
+  $$ = ast_new (DIVOP, $2, NULL);
+}
+| AND FACTOR
+{
+  $$ = ast_new (ANDOP, $2, NULL);
+}
+| TIMES FACTOR BINARY_OPERATOR_FACTOR_LIST
+{
+  ast* subterm = ast_new (MULTOP, $2, NULL);
+  $$ = ast_set_right_subtree (subterm, $3);
+}
+| DIVIDE FACTOR BINARY_OPERATOR_FACTOR_LIST
+{
+  ast* subterm = ast_new (DIVOP, $2, NULL);
+  $$ = ast_set_right_subtree (subterm, $3);
+}
+| AND FACTOR BINARY_OPERATOR_FACTOR_LIST
+{
+  ast* subterm = ast_new (ANDOP, $2, NULL);
+  $$ = ast_set_right_subtree (subterm, $3);
+}
+;
+
+FACTOR
+: UNSIGNED_CONSTANT
+{
+  $$ = $1;
+}
+| VARIABLE
+{
+  $$ = $1;
+}
+| METHOD_CALL_STATEMENT
+{
+  $$ = $1;
+}
+| LPAREN EXPRESSION RPAREN
+{
+  $$ = $2;
+}
+| NOT FACTOR
+{
+  $$ = $2;
+}
+;
+
+UNSIGNED_CONSTANT
+: ICONST
+{
+  $$ = ast_leaf (INTEGERTNODE, $1);
+}
+| SCONST
+{
+  $$ = ast_leaf (STRINGNODE, $1);
+}
+;
+
+VARIABLE
+: ID VARIABLE_LIST
+{
+  if ($2 != NULL)
+    {
+      $$ = ast_new (VAROP, ast_make_leaf (IDNODE, $1), NULL);
+    }
+}
+;
+
+VARIABLE_LIST
+: /* empty */
+{
+  $$ = NULL;
+}
+| VARIABLE_LIST EXPRESSION_BRACKET_LIST
+{
+  if ($1 == NULL)
+    {
+      $$ = $1;
+    }
+  else
+    {
+      $$ = ast_set_right_subtree ($1, $2);
+    }
+}
+| VARIABLE_LIST DOT ID
+{
+  ast* field_node = ast_new (FIELDOP, ast_make_leaf (IDNODE, $3), NULL);
+  if ($1 == NULL)
+    {
+      $$ = field_node;
+    }
+  else
+    {
+      ast_set_right_subtree ($1, field_node);
+    }
+}
+;
+
+EXPRESSION_BRACKET_LIST
+: LBRACKET EXPRESSION_LIST RBRAC
+{
+  $$ = ast_set_right_subtree_operation ($2, INDEXOP);
 }
 ;
 
