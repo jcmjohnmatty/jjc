@@ -67,7 +67,6 @@
 %type <tree> EXPRESSION_LIST
 %type <tree> VARIABLE_DECLARATION_ID
 %type <tree> VARIABLE_INITIALIZATION
-%type <tree> VARIABLE_INITIALIZER
 %type <tree> VARIABLE_INITALIZER
 %type <tree> VARIABLE_INITALIZER_LIST
 %type <tree> VARIABLE_DECLARATION_OR_INITIALIZATION_LIST
@@ -203,14 +202,11 @@ VARIABLE_DECLARATION_OR_INITIALIZATION_LIST
 {
   $$ = $1;
 }
-| VARIABLE_DECLARATION_OR_INITIALIZATION COMMA VARIABLE_DECLARATION_OR_INITIALIZATION_LIST
+| VARIABLE_DECLARATION_OR_INITIALIZATION_LIST COMMA VARIABLE_DECLARATION_OR_INITIALIZATION
 {
   $$ = ast_new (DECLOP, NULL, NULL);
-  $$ = ast_set_right_subtree ($$, $1);
-  if ($3 != NULL)
-    {
-      $$ = ast_set_left_subtree ($3, $$);
-    }
+  $$ = ast_set_right_subtree ($$, $3);
+  $$ = ast_set_left_subtree ($1, $$);
 }
 ;
 
@@ -237,13 +233,13 @@ VARIABLE_DECLARATION_ID
 ;
 
 VARIABLE_INITIALIZATION
-: VARIABLE_DECLARATION_ID EQUAL VARIABLE_INITIALIZER
+: VARIABLE_DECLARATION_ID EQUAL VARIABLE_INITALIZER
 {
   $$ = ast_new (COMMAOP, $1, ast_new (COMMAOP, field_declaration_type, $3));
 }
 ;
 
-VARIABLE_INITIALIZER
+VARIABLE_INITALIZER
 : EXPRESSION
 {
   $$ = $1;
@@ -307,10 +303,6 @@ METHOD_DECLARATION_LIST
 : /* empty */
 {
   $$ = NULL;
-}
-| METHOD_DECLARATION
-{
-  $$ = ast_new (BODYOP, NULL, $1);
 }
 | METHOD_DECLARATION_LIST METHOD_DECLARATION
 {
@@ -640,20 +632,20 @@ BINARY_OPERATOR_TERM_LIST
 {
   $$ = ast_new (OROP, NULL, $2);
 }
-| PLUS TERM BINARY_OPERATOR_TERM_LIST
+| BINARY_OPERATOR_TERM_LIST PLUS TERM
 {
-  ast* subterm = ast_new (ADDOP, NULL, $2);
-  $$ = ast_set_left_subtree (subterm, $3);
+  ast* subterm = ast_new (ADDOP, NULL, $3);
+  $$ = ast_set_left_subtree ($1, subterm);
 }
-| MINUS TERM BINARY_OPERATOR_TERM_LIST
+| BINARY_OPERATOR_TERM_LIST MINUS TERM
 {
   ast* subterm = ast_new (SUBOP, NULL, $2);
-  $$ = ast_set_left_subtree (subterm, $3);
+  $$ = ast_set_left_subtree ($1, subterm);
 }
-| OR TERM BINARY_OPERATOR_TERM_LIST
+| BINARY_OPERATOR_TERM_LIST OR TERM
 {
   ast* subterm = ast_new (OROP, NULL, $2);
-  $$ = ast_set_left_subtree (subterm, $3);
+  $$ = ast_set_left_subtree ($1, subterm);
 }
 ;
 
@@ -688,20 +680,20 @@ BINARY_OPERATOR_FACTOR_LIST
 {
   $$ = ast_new (ANDOP, $2, NULL);
 }
-| TIMES FACTOR BINARY_OPERATOR_FACTOR_LIST
+| BINARY_OPERATOR_FACTOR_LIST TIMES FACTOR
 {
-  ast* subterm = ast_new (MULTOP, $2, NULL);
-  $$ = ast_set_right_subtree (subterm, $3);
+  ast* subterm = ast_new (MULTOP, $3, NULL);
+  $$ = ast_set_right_subtree ($1, subterm);
 }
-| DIVIDE FACTOR BINARY_OPERATOR_FACTOR_LIST
+| BINARY_OPERATOR_FACTOR_LIST DIVIDE FACTOR
 {
-  ast* subterm = ast_new (DIVOP, $2, NULL);
-  $$ = ast_set_right_subtree (subterm, $3);
+  ast* subterm = ast_new (DIVOP, $3, NULL);
+  $$ = ast_set_right_subtree ($1, subterm);
 }
-| AND FACTOR BINARY_OPERATOR_FACTOR_LIST
+| BINARY_OPERATOR_FACTOR_LIST AND FACTOR
 {
-  ast* subterm = ast_new (ANDOP, $2, NULL);
-  $$ = ast_set_right_subtree (subterm, $3);
+  ast* subterm = ast_new (ANDOP, $3, NULL);
+  $$ = ast_set_right_subtree ($1, subterm);
 }
 ;
 
