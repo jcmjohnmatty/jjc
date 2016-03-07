@@ -4,6 +4,6 @@ program xyz;
 class Test
 {
   declarations
-   int a;
+   int a=1;
   enddeclarations
 }

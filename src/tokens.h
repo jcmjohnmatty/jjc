@@ -1,58 +1,6 @@
 #ifndef __JJC_TOKENS_H_
 #define __JJC_TOKENS_H_
 
-#ifdef AND
-#undef AND
-#endif
-#ifdef ASSGN
-#undef ASSGN
-#endif
-#ifdef DECLARATION
-#undef DECLARATION
-#endif
-#ifdef ENDDECLARATION
-#undef ENDDECLARATION
-#endif
-#ifdef EQUAL
-#undef EQUAL
-#endif
-#ifdef GT
-#undef GT
-#endif
-#ifdef ID
-#undef ID
-#endif
-#ifdef INT
-#undef INT
-#endif
-#ifdef LBRAC
-#undef LBRAC
-#endif
-#ifdef DOT
-#undef DOT
-#endif
-#ifdef DOT
-#undef DOT
-#endif
-#ifdef DOT
-#undef DOT
-#endif
-#ifdef DOT
-#undef DOT
-#endif
-#ifdef DOT
-#undef DOT
-#endif
-#ifdef DOT
-#undef DOT
-#endif
-#ifdef DOT
-#undef DOT
-#endif
-#ifdef DOT
-#undef DOT
-#endif
-
 #define AND                257
 #define ASSGN              258
 #define DECLARATION        259
