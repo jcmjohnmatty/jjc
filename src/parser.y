@@ -265,7 +265,7 @@ EXPRESSION_BRACKET_LIST
 {
   $$ = ast_new (COMMAOP, NULL, $2);
 }
-| EXPRESSION_LIST LBRAC EXPRESSION RBRAC
+| EXPRESSION_BRACKET_LIST LBRAC EXPRESSION RBRAC
 {
   $$ = ast_new (COMMAOP, NULL, NULL);
   $$ = ast_set_right_subtree ($$, $3);
@@ -438,18 +438,136 @@ ID_OR_ID_ARRAY
 ;
 
 STATEMENT_LIST
+: LBRACE STATEMENT_COMMA_LIST RBRACE
+{
+  $$ = $2;
+}
+;
+
+STATEMENT_COMMA_LIST
+: STATEMENT
+{
+  $$ = ast_new (STMTOP, NULL, $1);
+}
+| STATEMENT SEMI STATEMENT_COMMA_LIST
+{
+  $$ = ast_set_left_subtree ($1, $3);
+}
+;
+
+STATEMENT
+: ASSIGNMENT_STATEMENT
+{
+  $$ = $1;
+}
+| METHOD_CALL_STATEMENT
+{
+  $$ = $1;
+}
+| RETURN_STATEMENT
+{
+  $$ = $1;
+}
+| IF_STATEMENT
+{
+  $$ = $1;
+}
+| WHILE_STATEMENT
+{
+  $$ = $1;
+}
+;
+
+ASSIGNMENT_STATEMENT
+: VARIABLE EQUAL EXPRESSION
+{
+  ast* var_node = ast_new (ASSIGNOP, NULL, $1);
+  $$ = ast_new (ASSIGNOP, var_node, $3);
+}
+;
+
+METHOD_CALL_STATEMENT
+: VARIABLE EXPRESSION_PAREN_LIST
+{
+  $$ = ast_new (ROUTINECALLOP, $1, $2);
+}
+;
+
+RETURN_STATEMENT
+: RETURN
+{
+  $$ = ast_new (RETURNOP, NULL, NULL);
+}
+| RETURN EXPRESSION
+{
+  $$ = ast_new (RETURNOP, $2, NULL);
+}
+;
+
+IF_STATEMENT
 :
 {
 }
 ;
 
+WHILE_STATEMENT
+:
+{
+}
+;
+
+EXPRESSION_PAREN_LIST
+: LPARENN RPAREN
+{
+  $$ = NULL;
+}
+| LPAREN EXPRESSION_LIST RPAREN
+{
+  $$ = $2;
+  $$ = ast_set_right_subtree ($$, $3);
+  if ($1 != NULL)
+    {
+      $$ = ast_set_left_subtree ($1, $$);
+    }
+}
+
+EXPRESSION_LIST
+: EXPRESSION
+{
+  $$ = ast_new (COMMAOP, $1, NULL);
+}
+| EXPRESSION COMMA EXPRESSION_LIST
+{
+  ast* comma_expression = ast_new (COMMAOP, $1, NULL);
+  $$ = ast_set_right_subtree (comma_expression, $3);
+}
+;
+
 COMPARISON_OPERATOR
 : LT
+{
+  $$ = $1;
+}
 | LE
+{
+  $$ = $1;
+}
 | EQ
+{
+  $$ = $1;
+}
 | NE
+{
+  $$ = $1;
+}
 | GE
+{
+  $$ = $1;
+}
 | GT
+{
+  $$ = $1;
+}
 ;
 
 EXPRESSION
