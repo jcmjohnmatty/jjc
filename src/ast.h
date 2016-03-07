@@ -83,15 +83,6 @@ extern ast* field_declaration_type;
 extern ast* method_declaration_type;
 
 /**
- * @brief YYSTYPE.
- */
-typedef union
-{
-  int constant;
-  ast* tree;
-} YYSTYPE;
-
-/**
  * @brief Create a leaf node with a given node_type and data.
  *
  * @param[in] type The new type of the for the <code>ast</code>'s leaf.

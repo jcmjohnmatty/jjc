@@ -11,6 +11,12 @@
   #include <stdlib.h>
 %}
 
+%union
+{
+  int constant;
+  ast* tree;
+}
+
 %token <constant> AND
 %token <constant> ASSGN
 %token <constant> DECLARATION
@@ -52,36 +58,59 @@
 %token <constant> VOID
 %token <constant> EOF
 
-%type <tree> PROGRAM
+%type <tree> PROGRAM_DECLARATION
+%type <tree> CLASS_DECLARATION_LIST
 %type <tree> CLASS_DECLARATION
 %type <tree> CLASS_BODY
-%type <tree> DECLARATIONS
-%type <tree> VARIABLE_DECLARATION
+%type <tree> ID_LIST
+%type <tree> EXPRESSION_BRACKET_LIST
+%type <tree> EXPRESSION_LIST
 %type <tree> VARIABLE_DECLARATION_ID
+%type <tree> VARIABLE_INITIALIZATION
 %type <tree> VARIABLE_INITIALIZER
+%type <tree> VARIABLE_INITALIZER
+%type <tree> VARIABLE_INITALIZER_LIST
+%type <tree> VARIABLE_DECLARATION_OR_INITIALIZATION_LIST
+%type <tree> VARIABLE_DECLARATION_OR_INITIALIZATION_STATEMENT
+%type <tree> VARIABLE_DECLARATION_OR_INITIALIZATION
+%type <tree> FIELD_DECLARATION_LIST
 %type <tree> ARRAY_INITALIZER
+%type <tree> DECLARATION_LIST
 %type <tree> ARRAY_CREATION_EXPRESSION
+%type <tree> EXPRESSION_INDEXING_LIST
+%type <tree> METHOD_DECLARATION_LIST
 %type <tree> METHOD_DECLARATION
 %type <tree> FORMAL_PARAMETER_LIST
+%type <tree> PARTIAL_PARAMETER_LIST
 %type <tree> BLOCK
 %type <tree> TYPE
+%type <tree> ID_DOTS
+%type <tree> ID_ARR
+%type <tree> INT_ARR
+%type <tree> ID_OR_ID_ARRAY
 %type <tree> STATEMENT_LIST
+%type <tree> STATEMENT_COMMA_LIST
 %type <tree> STATEMENT
 %type <tree> ASSIGNMENT_STATEMENT
 %type <tree> METHOD_CALL_STATEMENT
 %type <tree> RETURN_STATEMENT
 %type <tree> IF_STATEMENT
 %type <tree> WHILE_STATEMENT
+%type <tree> COMPARISON_OPERATOR
 %type <tree> EXPRESSION
 %type <tree> SIMPLE_EXPRESSION
+%type <tree> EXPRESSION_PAREN_LIST
 %type <tree> TERM
+%type <tree> BINARY_OPERATOR_TERM_LIST
 %type <tree> FACTOR
+%type <tree> BINARY_OPERATOR_FACTOR_LIST
 %type <tree> UNSIGNED_CONSTANT
 %type <tree> VARIABLE
+%type <tree> VARIABLE_LIST
 
 %%
 
-PROGRAM
+PROGRAM_DECLARATION
 : PROGRAM ID SEMI CLASS_DECLARATION_LIST
 {
   $$ = ast_new (PROGRAMOP,
@@ -122,7 +151,7 @@ CLASS_BODY
       $$ = ast_new (BODYOP, $2, $3);
     }
 }
-  ;
+;
 
 DECLARATION_LIST
 : /* empty */
@@ -170,7 +199,6 @@ VARIABLE_DECLARATION_OR_INITIALIZATION_STATEMENT
 ;
 
 VARIABLE_DECLARATION_OR_INITIALIZATION_LIST
-
 : VARIABLE_DECLARATION_OR_INITIALIZATION
 {
   $$ = $1;
@@ -209,13 +237,13 @@ VARIABLE_DECLARATION_ID
 ;
 
 VARIABLE_INITIALIZATION
-: VARIABLE_DECLARATION_ID EQUAL VARIABLE_INITALIZER
+: VARIABLE_DECLARATION_ID EQUAL VARIABLE_INITIALIZER
 {
   $$ = ast_new (COMMAOP, $1, ast_new (COMMAOP, field_declaration_type, $3));
 }
 ;
 
-VARIABLE_INITALIZER
+VARIABLE_INITIALIZER
 : EXPRESSION
 {
   $$ = $1;
@@ -295,13 +323,6 @@ METHOD_DECLARATION_LIST
 }
 ;
 
-VOID
-:
-{
-  $$ = VOID;
-}
-;
-
 TYPE_OR_VOID
 : TYPE
 | VOID
@@ -329,7 +350,7 @@ FORMAL_PARAMETER_LIST
 }
 ;
 
-IDENTIFIER_LIST
+ID_LIST
 : ID
 {
   /** @todo Is this duplication right/required? */
@@ -341,7 +362,7 @@ IDENTIFIER_LIST
    */
   $$ = ast_new (RARGTYPEOP, $$, NULL);
 }
-: ID_LIST COMMA ID
+| ID_LIST COMMA ID
 {
   /** @todo Is this duplication right/required? */
   ast* id_node = ast_make_leaf (IDNODE, $3);
@@ -354,14 +375,13 @@ IDENTIFIER_LIST
   $$ = ast_set_right_subtree ($1, third_id_node);
 }
 ;
-;
 
 PARTIAL_PARAMETER_LIST
-: VAL INT IDENTIFIER_LIST
+: VAL INT ID_LIST
 {
   $$ = $3;
 }
-| INT IDENTIFIER_LIST
+| INT ID_LIST
 {
   $$ = $2;
 }
@@ -429,7 +449,7 @@ ID_OR_ID_ARRAY
 {
   $$ = ast_new (TYPEOPID, ast_make_leaf (IDNODE, $1), NULL);
 }
-: ID LBRAC RBRAC
+| ID LBRAC RBRAC
 {
   ast* terminal_node = ast_new (INDEXOP, NULL, NULL);
   ast* indexed_node = ast_new (INDEXOP, NULL, terminal_node);
@@ -526,7 +546,7 @@ WHILE_STATEMENT
 ;
 
 EXPRESSION_PAREN_LIST
-: LPARENN RPAREN
+: LPAREN RPAREN
 {
   $$ = NULL;
 }
@@ -760,7 +780,7 @@ VARIABLE_LIST
 ;
 
 EXPRESSION_BRACKET_LIST
-: LBRACKET EXPRESSION_LIST RBRAC
+: LBRAC EXPRESSION_LIST RBRAC
 {
   $$ = ast_set_right_subtree_operation ($2, INDEXOP);
 }
