@@ -1,4 +1,4 @@
-%option header-file="lexer.h"
+A%option header-file="lexer.h"
 %option outfile="lexer.c"
 %option noyywrap
 
@@ -7,7 +7,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-#include <tokens.h>
+#include <parser.h>
 
 #include <ast.h>
 #include <errors.h>
@@ -26,7 +26,6 @@ NEWLINE       [\n]
 %s COMMENT
 %s STRING
 %%
-
 
 <INITIAL>"/*"               { BEGIN(COMMENT); }
 <COMMENT>"*/"               { BEGIN(INITIAL); }
@@ -139,7 +138,7 @@ NEWLINE       [\n]
 <INITIAL>program            { yycolumn += yyleng; return PROGRAM; }
 <INITIAL>\]                 { yycolumn += yyleng; return RBRAC; }
 <INITIAL>\)                 { yycolumn += yyleng; return RPAREN; }
-<INITIAL>\;                 { yycolumn += yyleng; return SEMI; }
+<INITIAL>\;                 { yycolumn += yyleng; ;return SEMI; }
 <INITIAL>val                { yycolumn += yyleng; return VAL; }
 <INITIAL>while              { yycolumn += yyleng; return WHILE; }
 <INITIAL>class              { yycolumn += yyleng; return CLASS; }
@@ -211,7 +210,6 @@ NEWLINE       [\n]
   error_line_column (yyline, yycolumn, "invalid operator");
 }
 <INITIAL><<EOF>>            { return EOF; }
-<INITIAL>.                  { yycolumn += yyleng; }
 
 %%
 

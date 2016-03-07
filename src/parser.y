@@ -117,14 +117,21 @@ PROGRAM_DECLARATION
 ;
 
 CLASS_DECLARATION_LIST
-: CLASS_DECLARATION
+: /* empty */
 {
-  $$ = $1;
+  $$ = NULL;
 }
 | CLASS_DECLARATION_LIST CLASS_DECLARATION
 {
   ast* t = ast_new (CLASSOP, NULL, $2);
-  $$ = ast_set_left_subtree ($1, t);
+  if ($1 != NULL)
+    {
+      $$ = ast_set_left_subtree ($1, t);
+    }
+  else
+    {
+      $$ = $2;
+    }
 }
 ;
 
@@ -136,7 +143,7 @@ CLASS_DECLARATION
 ;
 
 CLASS_BODY
-: RBRACE DECLARATION_LIST METHOD_DECLARATION_LIST LBRACE
+: LBRACE DECLARATION_LIST METHOD_DECLARATION_LIST RBRACE
 {
   if ($3 == NULL && $2 == NULL)
     {
@@ -147,21 +154,24 @@ CLASS_BODY
       $$ = ast_new (BODYOP, $2, $3);
     }
 }
+| LBRACE DECLARATION_LIST RBRACE
+{
+  $$ = ast_new (BODYOP, $2, NULL);
+}
+| LBRACE METHOD_DECLARATION_LIST RBRACE
+{
+  $$ = ast_new (BODYOP, NULL, $2);
+}
 ;
 
 DECLARATION_LIST
-: /* empty */
+: DECLARATION ENDDECLARATION
 {
   $$ = NULL;
 }
-| DECLARATION DECLARATION_LIST FIELD_DECLARATION_LIST ENDDECLARATION
+| DECLARATION FIELD_DECLARATION_LIST ENDDECLARATION
 {
-  $$ = ast_new (BODYOP, NULL, NULL);
-  $$ = ast_set_right_subtree ($$, $3);
-  if ($1 != NULL)
-    {
-      $$ = ast_set_left_subtree ($2, $$);
-    }
+  $$ = ast_new (BODYOP, NULL, $2);
 }
 ;
 
