@@ -1,0 +1,9 @@
+/* -*- Mode:java -*- */
+
+program xyz;
+class Test
+{
+  declarations
+   int a;
+  enddeclarations
+}
