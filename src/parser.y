@@ -131,7 +131,7 @@ CLASS_DECLARATION_LIST
 CLASS_DECLARATION
 : CLASS ID CLASS_BODY
 {
-  $$  = ast_new (CLASSDEFOP, $3, ast_make_leaf (IDNODE, $2));
+  $$ = ast_new (CLASSDEFOP, $3, ast_make_leaf (IDNODE, $2));
 }
 ;
 
@@ -260,13 +260,13 @@ VARIABLE_INITALIZER_LIST
 {
   $$ = ast_new (COMMAOP, NULL, $1);
 }
-| VARIABLE_INITALIZER_LIST VARIABLE_INITALIZER
+| VARIABLE_INITALIZER COMMA VARIABLE_INITALIZER_LIST
 {
   $$ = ast_new (COMMAOP, NULL, NULL);
-  $$ = ast_set_right_subtree ($$, $2);
+  $$ = ast_set_right_subtree ($$, $1);
   if ($1 != NULL)
     {
-      $$ = ast_set_left_subtree ($1, $$);
+      $$ = ast_set_left_subtree ($3, $$);
     }
 }
 ;
@@ -486,7 +486,8 @@ STATEMENT_COMMA_LIST
         }
       else
         {
-          $$ = ast_set_left_subtree ($1, $2);
+          ast* t = ast_new (STMTOP, NULL, $1);
+          $$ = ast_set_left_subtree (t, $2);
         }
     }
 }
