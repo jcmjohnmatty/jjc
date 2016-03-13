@@ -100,7 +100,7 @@ main (int argc, char* argv[]) {
 		  exit (1);
         }
 
-      printf ("The output of our lexer for file `%s':\n\n", argv[optind]);
+      printf ("The output of our parser for file `%s':\n\n", argv[optind]);
 
       ++optind;
 

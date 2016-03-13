@@ -101,15 +101,11 @@ strtbl_get_index (strtbl* stbl, char* string)
   int i;
   int length = strlen (string);
   int start = 0;
-
-  for (i = 0; i < stbl->n_strings; ++i)
+  for (start = 0; start < stbl->buffer_length; ++start)
     {
-      if (start + length > stbl->buffer_length)
-        {
-          return -1;
-        }
+      /** @todo Check if start + 1 is in length bounds? */
       if (strncmp ((char*) (stbl->buffer + start), string, length) == 0
-          && stbl->buffer[start + 1] == '\0')
+          && stbl->buffer[start + length] == '\0')
         {
           return start - 1;
         }
@@ -117,7 +113,6 @@ strtbl_get_index (strtbl* stbl, char* string)
         {
           ++start;
         }
-      ++start;
     }
   return -1;
 }
@@ -128,15 +123,11 @@ strtbl_contains_value (strtbl* stbl, char* string)
   int i;
   int length = strlen (string);
   int start = 0;
-  for (i = 0; i < stbl->n_strings; ++i)
+  for (start = 0; start < stbl->buffer_length; ++start)
     {
-      if (start + length > stbl->buffer_length)
-        {
-          return 0;
-        }
       /** @todo Check if start + 1 is in length bounds? */
       if (strncmp ((char*) (stbl->buffer + start), string, length) == 0
-          && stbl->buffer[start + 1] == '\0')
+          && stbl->buffer[start + length] == '\0')
         {
           return 1;
         }
@@ -144,7 +135,6 @@ strtbl_contains_value (strtbl* stbl, char* string)
         {
           ++start;
         }
-      ++start;
     }
   return 0;
 }

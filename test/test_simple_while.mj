@@ -1,0 +1,16 @@
+/* -*- Mode:java -*- */
+program simple_while;
+class simple_while
+{
+    method void main()
+        declarations
+            int i = 0;
+        enddeclarations
+    {
+        while (i < 5)
+        {
+            System.println(i);
+            i := i + 1;
+        }
+    }
+}

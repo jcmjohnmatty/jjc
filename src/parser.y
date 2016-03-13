@@ -188,7 +188,6 @@ FIELD_DECLARATION_LIST
 VARIABLE_DECLARATION_OR_INITIALIZATION_STATEMENT
 : TYPE VARIABLE_DECLARATION_OR_INITIALIZATION_LIST SEMI
 {
-  field_declaration_type = $1;
   $$ = $2;
 }
 ;
@@ -393,15 +392,18 @@ BLOCK
 TYPE
 : ID_DOTS
 {
+  field_declaration_type = $1;
   $$ = $1;
 }
 | INT
 {
   $$ = ast_new (TYPEIDOP, ast_make_leaf (INTEGERTNODE, $1), NULL);
+  field_declaration_type = $$;
 }
 | INT_ARR
 {
   $$ = $1;
+  field_declaration_type = $1;
 }
 ;
 
@@ -452,26 +454,54 @@ STATEMENT_LIST
 ;
 
 STATEMENT_COMMA_LIST
-: STATEMENT SEMI
+: STATEMENT
 {
-  $$ = ast_new (STMTOP, NULL, $1);
+  if ($1 == NULL)
+    {
+      $$ = NULL;
+    }
+  else
+    {
+      $$ = ast_new (STMTOP, NULL, $1);
+    }
 }
-| STATEMENT SEMI STATEMENT_COMMA_LIST
+| STATEMENT STATEMENT_COMMA_LIST
 {
-  $$ = ast_set_left_subtree ($1, $3);
+  if ($1 == NULL)
+    {
+      if ($2 == NULL)
+        {
+          $$ = NULL;
+        }
+      else
+        {
+          $$ = $2;
+        }
+    }
+  else
+    {
+      if ($2 == NULL)
+        {
+          $$ = ast_new (STMTOP, NULL, $1);
+        }
+      else
+        {
+          $$ = ast_set_left_subtree ($1, $2);
+        }
+    }
 }
 ;
 
 STATEMENT
-: ASSIGNMENT_STATEMENT
+: ASSIGNMENT_STATEMENT SEMI
 {
   $$ = $1;
 }
-| METHOD_CALL_STATEMENT
+| METHOD_CALL_STATEMENT SEMI
 {
   $$ = $1;
 }
-| RETURN_STATEMENT
+| RETURN_STATEMENT SEMI
 {
   $$ = $1;
 }
@@ -483,10 +513,14 @@ STATEMENT
 {
   $$ = $1;
 }
+| SEMI
+{
+  $$ = NULL;
+}
 ;
 
 ASSIGNMENT_STATEMENT
-: VARIABLE EQUAL EXPRESSION
+: VARIABLE ASSGN EXPRESSION
 {
   ast* var_node = ast_new (ASSIGNOP, NULL, $1);
   $$ = ast_new (ASSIGNOP, var_node, $3);
@@ -526,9 +560,9 @@ IF_STATEMENT
 ;
 
 WHILE_STATEMENT
-: WHILE LPAREN EXPRESSION RPAREN STATEMENT_LIST
+: WHILE EXPRESSION STATEMENT_LIST
 {
-  $$ = ast_new (LOOPOP, $3, $5);
+  $$ = ast_new (LOOPOP, $2, $3);
 }
 ;
 
@@ -557,40 +591,32 @@ EXPRESSION_LIST
 COMPARISON_OPERATOR
 : LT
 {
-  $$ = ast_new (LT, NULL, NULL);
+  $$ = ast_new (LTOP, NULL, NULL);
 }
 | LE
 {
-  $$ = ast_new (LE, NULL, NULL);
+  $$ = ast_new (LEOP, NULL, NULL);
 }
 | EQ
 {
-  $$ = ast_new (EQ, NULL, NULL);
+  $$ = ast_new (EQOP, NULL, NULL);
 }
 | NE
 {
-  $$ = ast_new (NE, NULL, NULL);
+  $$ = ast_new (NEOP, NULL, NULL);
 }
 | GE
 {
-  $$ = ast_new (GE, NULL, NULL);
+  $$ = ast_new (GEOP, NULL, NULL);
 }
 | GT
 {
-  $$ = ast_new (GT, NULL, NULL);
+  $$ = ast_new (GTOP, NULL, NULL);
 }
 ;
 
 EXPRESSION
-: UNSIGNED_CONSTANT
-{
-  $$ = $1;
-}
-| VARIABLE
-{
-  $$ = $1;
-}
-| SIMPLE_EXPRESSION
+: SIMPLE_EXPRESSION
 {
   $$ = $1;
 }
@@ -602,7 +628,20 @@ EXPRESSION
 ;
 
 SIMPLE_EXPRESSION
-: PLUS TERM BINARY_OPERATOR_TERM_LIST
+: TERM
+{
+  $$ = $1;
+}
+| PLUS TERM
+{
+  $$ = $2;
+}
+| MINUS TERM
+{
+  ast* neg_node = ast_new (UNARYNEGOP, $2, NULL);
+  $$ = neg_node;
+}
+| PLUS TERM BINARY_OPERATOR_TERM_LIST
 {
   $$ = ast_set_left_subtree ($3, $2);
 }
@@ -714,6 +753,7 @@ FACTOR
 }
 | NOT FACTOR
 {
+  /// @todo NOTOP
   $$ = $2;
 }
 ;
@@ -734,7 +774,8 @@ VARIABLE
 {
   if ($2 != NULL)
     {
-      $$ = ast_new (VAROP, ast_make_leaf (IDNODE, $1), NULL);
+      ast* right = ast_new (SELECTOP, $2, NULL);
+      $$ = ast_new (VAROP, ast_make_leaf (IDNODE, $1), right);
     }
   else
     {

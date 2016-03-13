@@ -1,4 +1,4 @@
-A%option header-file="lexer.h"
+%option header-file="lexer.h"
 %option outfile="lexer.c"
 %option noyywrap
 
@@ -18,7 +18,7 @@ extern YYSTYPE yylval;
 %}
 
 DIGIT         [0-9]
-ID            [\_a-zA-Z][\_a-zA-Z0-9]*
+ID            [a-zA-Z_][a-zA-Z_0-9]*
 INTEGER       []
 DELIM         [ \t]
 NEWLINE       [\n]
@@ -177,7 +177,6 @@ NEWLINE       [\n]
     {
       yytext[i] = tolower (yytext[i]);
     }
-
 
   if (!strtbl_contains_value (string_table, yytext))
     {
