@@ -220,9 +220,9 @@ VARIABLE_DECLARATION_ID
 {
   $$ = ast_make_leaf (IDNODE, $1);
 }
-| ID LBRAC RBRAC
+| VARIABLE_DECLARATION_ID LBRAC RBRAC
 {
-  $$ = ast_make_leaf (IDNODE, $1);
+  $$ = ast_new (INDEXOP, NULL, $1);
 }
 ;
 
@@ -402,11 +402,13 @@ TYPE
 ;
 
 INT_ARR
-: INT LBRAC RBRAC
+: INT
 {
-  ast* terminal_node = ast_new (INDEXOP, NULL, NULL);
-  ast* indexed_node = ast_new (INDEXOP, NULL, terminal_node);
-  $$ = ast_new (TYPEIDOP, ast_make_leaf (INTEGERTNODE, $1), indexed_node);
+  $$ = ast_make_leaf (INTEGERTNODE, $1);
+}
+| INT_ARR LBRAC RBRAC
+{
+  $$ = ast_new (INDEXOP, $1, NULL);
 }
 ;
 
@@ -430,8 +432,7 @@ ID_OR_ID_ARRAY
 }
 | ID LBRAC RBRAC
 {
-  ast* terminal_node = ast_new (INDEXOP, NULL, NULL);
-  ast* indexed_node = ast_new (INDEXOP, NULL, terminal_node);
+  ast* indexed_node = ast_new (INDEXOP, NULL, NULL);
   $$ = ast_new (TYPEIDOP, ast_make_leaf (IDNODE, $1), indexed_node);
 }
 ;
@@ -786,9 +787,9 @@ VARIABLE_LIST
 {
   $$ = NULL;
 }
-| VARIABLE_LIST EXPRESSION_BRACKET_LIST
+| EXPRESSION_BRACKET_LIST VARIABLE_LIST
 {
-  if ($1 == NULL)
+  if ($2 == NULL)
     {
       $$ = $1;
     }
