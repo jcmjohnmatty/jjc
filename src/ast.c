@@ -209,32 +209,6 @@ ast_set_right_subtree_operation (ast* tree, int operation)
   while (p != NULL);
 }
 
-/* void */
-/* ast_set_left_subtree (ast* tree, ast* l) */
-/* { */
-/*   if (tree->node_type != EXPRNODE) */
-/*     { */
-/*       printf ("ast_set_left_subtree(): This node must be an EXPRNODE!\n"); */
-/*     } */
-/*   else */
-/*     { */
-/*       tree->left = l; */
-/*     } */
-/* } */
-
-/* void */
-/* ast_set_right_subtree (ast* tree, ast* r) */
-/* { */
-/*   if (tree->node_type != EXPRNODE) */
-/*     { */
-/*       printf ("ast_set_right_subtree(): This node must be an EXPRNODE!\n"); */
-/*     } */
-/*   else */
-/*     { */
-/*       tree->right = r; */
-/*     } */
-/* } */
-
 char* opnodenames[] =
   {
     "PROGRAMOP", "BODYOP", "DECLOP", "COMMAOP", "ARRAYTYPEOP", "TYPEIDOP",
@@ -293,6 +267,14 @@ ast_print2 (ast* tree, int depth)
     {
       indent (depth);
       printf ("[DUMMYNODE]\n");
+      return;
+    }
+
+  /* Void. */
+  if (tree == 0x24)
+    {
+      indent (depth);
+      printf ("[VOIDTYPEIDOP]\n");
       return;
     }
   if (tree->node_type == EXPRNODE)

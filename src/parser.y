@@ -346,10 +346,6 @@ ID_LIST
   /** @todo Is this duplication right/required? */
   ast* id_node = ast_make_leaf (IDNODE, $1);
   $$ = ast_new (COMMAOP, id_node, ast_make_leaf (INTEGERTNODE, $1));
-  /**
-   * @todo Whether to use RARGTYPEOP or VARGTYPEOP is ambiguous based on
-   *       the description we were given.
-   */
   $$ = ast_new (RARGTYPEOP, $$, NULL);
 }
 | ID_LIST COMMA ID
@@ -358,10 +354,6 @@ ID_LIST
   ast* id_node = ast_make_leaf (IDNODE, $3);
   ast* third_id_node = ast_new (COMMAOP, id_node, $1);
 
-  /**
-   * @todo Whether to use RARGTYPEOP or VARGTYPEOP is ambiguous based on
-   *       the description we were given.
-   */
   third_id_node = ast_new (RARGTYPEOP, third_id_node, NULL);
   $$ = ast_set_right_subtree ($1, third_id_node);
 }
@@ -370,6 +362,8 @@ ID_LIST
 PARTIAL_PARAMETER_LIST
 : VAL INT ID_LIST
 {
+  ast_set_operation ($3, VARGTYPEOP);
+  ast_set_right_subtree_operation ($3, VARGTYPEOP);
   $$ = $3;
 }
 | INT ID_LIST
@@ -547,15 +541,17 @@ RETURN_STATEMENT
 ;
 
 IF_STATEMENT
-: IF LPAREN EXPRESSION RPAREN STATEMENT_LIST ELSE STATEMENT_LIST
+: IF EXPRESSION STATEMENT_LIST ELSE STATEMENT_LIST
 {
-  ast* exp_statement_pair = ast_new (COMMAOP, $3, $5);
+  ast* exp_statement_pair = ast_new (COMMAOP, $2, $3);
   ast* if_half = ast_new (IFELSEOP, NULL, exp_statement_pair);
-  $$ = ast_new (IFELSEOP, if_half, $7);
+  $$ = ast_new (IFELSEOP, if_half, $5);
 }
-| IF LPAREN EXPRESSION RPAREN STATEMENT_LIST
+| IF EXPRESSION STATEMENT_LIST
 {
-  ast* exp_statement_pair = ast_new (COMMAOP, $3, $5);
+  ast_print ($2);
+  ast_print ($3);
+  ast* exp_statement_pair = ast_new (COMMAOP, $2, $3);
   $$ = ast_new (IFELSEOP, NULL, exp_statement_pair);
 }
 ;

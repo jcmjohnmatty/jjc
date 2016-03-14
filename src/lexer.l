@@ -32,6 +32,7 @@ PROGRAM_PATTERN                [pP][rR][oO][gG][rR][aA][mM]
 VAL_PATTERN                    [vV][aA][lL]
 WHILE_PATTERN                  [wW][hH][iI][lL][eE]
 CLASS_PATTERN                  [cC][lL][aA][sS][sS]
+IF_PATTERN                     [iI][fF]
 ELSE_PATTERN                   [eE][lL][sS][eE]
 RETURN_PATTERN                 [rR][eE][tT][uU][rR][nN]
 VOID_PATTERN                   [vV][oO][iI][dD]
@@ -159,6 +160,7 @@ VOID_PATTERN                   [vV][oO][iI][dD]
 <INITIAL>{CLASS_PATTERN}              { yycolumn += yyleng; return CLASS; }
 <INITIAL>\,                           { yycolumn += yyleng; return COMMA; }
 <INITIAL>\/                           { yycolumn += yyleng; return DIVIDE; }
+<INITIAL>{IF_PATTERN}                 { yycolumn += yyleng; return IF; }
 <INITIAL>{ELSE_PATTERN}               { yycolumn += yyleng; return ELSE; }
 <INITIAL>\=\=                         { yycolumn += yyleng; return EQ; }
 <INITIAL>\>\=                         { yycolumn += yyleng; return GE; }
