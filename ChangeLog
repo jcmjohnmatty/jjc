@@ -1,3 +1,11 @@
+2016-03-13	John C. Matty	<jcmjohnmatty@me.com>
+	* parser.y: Debugged parser.
+	* lexer.l: Fixed bugs in lexer regarding case-insensitive identifiers.
+	* symtbl.c: Fixed bugs regarding checking if a symtbl contains a string.
+	* test/: Added additional tests and refactored existing tests.
+	* ast.c: Cleanup.
+	* ast.h: Same.
+
 2016-02-07	John C. Matty	<jcmjohnmatty@me.com>
 	* all: Fixed build errors; Tested lexer; implemented symtbl.
 
