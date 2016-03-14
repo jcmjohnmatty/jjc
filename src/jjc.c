@@ -107,7 +107,6 @@ main (int argc, char* argv[]) {
       yyin = infile;
 
       yyparse ();
-      strtbl_print (string_table);
     }
   else
 	{
