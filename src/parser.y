@@ -402,9 +402,10 @@ TYPE
 ;
 
 INT_ARR
-: INT
+: INT LBRAC RBRAC
 {
   $$ = ast_make_leaf (INTEGERTNODE, $1);
+  $$ = ast_new (INDEXOP, $$, NULL);
 }
 | INT_ARR LBRAC RBRAC
 {
