@@ -1,18 +1,7 @@
-/*
- * there are three arrays for symbol table operation.  "symtbl_array" is the
- * real symbol table, it carries all the information of an id and will still be
- * used in code generation phase.  The attributes for an id are kept in a
- * link list pointed by its symbol table entry. It is easy to be extended in
- * the next phase to include more attributes, such like the size and the
- * location of a varialbe. Below are some sample attributes of an id.  You
- * should design your own. "stack" is a temporary structure in which all the
- * id's in the current scoping context are visible.  "attribute_array" is to
- * store all the attributes in symbol table.
- */
-
 #include <stdio.h>
 
 #include <ast.h>
+#include <source.h>
 #include <strtbl.h>
 #include <symtbl.h>
 
@@ -42,6 +31,8 @@ int nesting = 0;
 int attr_top = 0;
 
 extern int yyline;
+extern int yycolumn;
+
 /* string table in table.c */
 extern char strg_tbl[];
 
@@ -51,7 +42,6 @@ symtbl_init ()
   int strtbl_index;
   int symtbl_index;
 
-  /* Get the index of the string "system". */
   strtbl_index = strtbl_get_index (string_table, "system");
 
   if (strtbl_index != -1)
@@ -81,145 +71,145 @@ symtbl_init ()
 }
 
 void
-error_msg (int type, int action, int id, int symtbl_number)
+semantic_error (int type, int action, int id, int symtbl_number)
 {
   char* s;
 
-  printf ("Semantic Error--line: %d, ", yyline);
+  fprintf (stderr, "%s:%d:%d: error: ", sourcefile, yyline, yycolumn);
   switch (type)
     {
     case STACK_OVERFLOW:
-      printf ("stack overflow.\n");
+      fprintf (stderr, "stack overflow.\n");
       break;
 
     case REDECLARATION:
       s = string_table->buffer + id + 1;
-      printf ("symbol %s: redeclared.\n", s);
+      fprintf (stderr, "symbol %s: redeclared.\n", s);
       break;
 
     case ST_OVERFLOW:
-      printf ("symbol table overflow.\n");
+      fprintf (stderr, "symbol table overflow.\n");
       break;
 
     case UNDECLARATION:
       s = string_table->buffer + id + 1;
-      printf ("symbol %s: undeclared.\n", s);
+      fprintf (stderr, "symbol %s: undeclared.\n", s);
       break;
 
     case ATTR_OVERFLOW:
-      printf ("attribute array overflowed.\n");
+      fprintf (stderr, "attribute array overflowed.\n");
       break;
 
     case BOUND:
       s = string_table->buffer + id + 1;
-      printf ("symbol %s: not declared as a constant, can't be used as subrange bound.\n", s);
+      fprintf (stderr, "symbol %s: not declared as a constant, can't be used as subrange bound.\n", s);
       break;
 
     case ARGUMENTS_NUM1:
-      printf ("routine %s: argument number in definition is different with the previous forward declaration. \n", s);
+      fprintf (stderr, "routine %s: argument number in definition is different with the previous forward declaration. \n", s);
       break;
 
     case ARGUMENTS_NUM2:
       s = string_table->buffer + id + 1;
-      printf ("routine %s: argument number is different with the previous declaration. \n", s);
+      fprintf (stderr, "routine %s: argument number is different with the previous declaration. \n", s);
       break;
 
     case FORW_REDECLARE:
       s = string_table->buffer + id + 1;
-      printf ("routine %s: forward redeclaration.\n", s);
+      fprintf (stderr, "routine %s: forward redeclaration.\n", s);
       break;
 
     case PROCE_MISMATCH:
       s = string_table->buffer + id + 1;
-      printf ("symbol %s: can't act as a procedure call.\n", s);
+      fprintf (stderr, "symbol %s: can't act as a procedure call.\n", s);
       break;
 
     case FUNC_MISMATCH:
       s = string_table->buffer + id + 1;
-      printf ("symbol %s: can't act as a function call.\n", s);
+      fprintf (stderr, "symbol %s: can't act as a function call.\n", s);
       break;
 
     case VAR_VAL:
       s = string_table->buffer + id + 1;
-      printf ("routine %s: reference/value type of the ", s);
-      printf ("%s parameter different with previous forward declaration.\n",
-              symtbl_ordinal_abbreviation (symtbl_number));
+      fprintf (stderr, "routine %s: reference/value type of the ", s);
+      fprintf (stderr, "%s parameter different with previous forward declaration.\n",
+               symtbl_ordinal_abbreviation (symtbl_number));
       break;
 
     case CONSTANT_VAR:
       s = string_table->buffer + id + 1;
-      printf ("routine %s: the ", s);
-      printf ("%s parameter is a reference argument, can't be a constant.\n",
-              symtbl_ordinal_abbreviation (symtbl_number));
+      fprintf (stderr, "routine %s: the ", s);
+      fprintf (stderr, "%s parameter is a reference argument, can't be a constant.\n",
+               symtbl_ordinal_abbreviation (symtbl_number));
       break;
 
     case EXPR_VAR:
       s = string_table->buffer + id + 1;
-      printf ("routine %s: reference argument of the ", s);
-      printf ("%s parameter can't be a expression. \n",
-              symtbl_ordinal_abbreviation (symtbl_number));
+      fprintf (stderr, "routine %s: reference argument of the ", s);
+      fprintf (stderr, "%s parameter can't be a expression. \n",
+               symtbl_ordinal_abbreviation (symtbl_number));
       break;
 
     case CONSTANT_ASSIGN:
       s = string_table->buffer + id + 1;
-      printf ("symbol %s: declared to be a constant, can't be assigned a new value.\n", s);
+      fprintf (stderr, "symbol %s: declared to be a constant, can't be assigned a new value.\n", s);
       break;
 
     case ARR_TYPE_MIS:
       s = string_table->buffer + id + 1;
       if (symtbl_number == 0)
         {
-          printf ("symbol %s: isn't defined as an array.\n", s);
+          fprintf (stderr, "symbol %s: isn't defined as an array.\n", s);
         }
       else
         {
-          printf ("symbol %s: the ", s);
-          printf ("%s index isn't defined as an array.\n",
-                  symtbl_ordinal_abbreviation (symtbl_number));
+          fprintf (stderr, "symbol %s: the ", s);
+          fprintf (stderr, "%s index isn't defined as an array.\n",
+                   symtbl_ordinal_abbreviation (symtbl_number));
         }
       break;
 
     case ARR_DIME_MIS:
       s = string_table->buffer + id + 1;
-      printf ("symbol %s: inappropriate usage of arry element.\n", s);
+      fprintf (stderr, "symbol %s: inappropriate usage of arry element.\n", s);
       break;
 
     case REC_TYPE_MIS:
       s = string_table->buffer + id + 1;
-      printf ("symbol %s: illegal usage of a field name. \n", s);
+      fprintf (stderr, "symbol %s: illegal usage of a field name. \n", s);
       break;
 
     case INDX_MIS:
       s = string_table->buffer + id + 1;
-      printf ("symbol %s: has incorrect number of dimensions.\n", s);
+      fprintf (stderr, "symbol %s: has incorrect number of dimensions.\n", s);
       break;
 
     case FIELD_MIS:
       s = string_table->buffer + id + 1;
-      printf ("symbol %s: is an undeclared field name.\n", s);
+      fprintf (stderr, "symbol %s: is an undeclared field name.\n", s);
       break;
 
     case VARIABLE_MIS:
       s = string_table->buffer + id + 1;
-      printf ("symbol %s: can't be used as a variable.\n", s);
+      fprintf (stderr, "symbol %s: can't be used as a variable.\n", s);
       break;
 
     case NOT_TYPE:
       s = string_table->buffer + id + 1;
-      printf ("symbol %s: is not declared as a type.\n", s);
+      fprintf (stderr, "symbol %s: is not declared as a type.\n", s);
       break;
 
     case TYPE_MIS:
       s = string_table->buffer + id + 1;
-      printf ("symbol %s: incorrect type usage.\n", s);
+      fprintf (stderr, "symbol %s: incorrect type usage.\n", s);
       break;
 
     case MULTI_MAIN:
-      printf ("main() method already declared.\n");
+      fprintf (stderr, "main() method already declared.\n");
       break;
 
     default:
-      printf ("error type: %d.\n", type);
+      fprintf (stderr, "error type: %d.\n", type);
     }
 
   if (action == ABORT)
@@ -234,13 +224,13 @@ symtbl_insert_entry (int id)
   /* id is already declared in the current block. */
   if (symtbl_lookup_here (id))
   {
-    error_msg (REDECLARATION, CONTINUE, id, 0);
+    semantic_error (REDECLARATION, CONTINUE, id, 0);
     return 0;
   }
 
   if (symtbl_top >= SYMTBL_SIZE - 1)
     {
-      error_msg (ST_OVERFLOW, ABORT, 0 ,0);
+      semantic_error (ST_OVERFLOW, ABORT, 0 ,0);
     }
 
   ++symtbl_top;
@@ -266,7 +256,7 @@ symtbl_lookup (int id)
     }
 
   /* id is undefined, push a dummy element onto stack. */
-  error_msg (UNDECLARATION, CONTINUE, id, 0);
+  semantic_error (UNDECLARATION, CONTINUE, id, 0);
   symtbl_push (false, id, 0, true);
   return 0;
 }
@@ -304,7 +294,7 @@ symtbl_close_block (void)
     {
       if (!stack[i].used && !stack[i].is_dummy)
         {
-          /* error_msg(NOT_USED, CONTINUE, stack[i].name, 0);*/
+          /* semantic_error (NOT_USED, CONTINUE, stack[i].name, 0);*/
         }
     }
 
@@ -382,7 +372,7 @@ symtbl_set_attribute (int symtbl_index, int attribute_number, int attribute_valu
 
   if (attr_top >= ATTR_SIZE-1)
     {
-      error_msg (ATTR_OVERFLOW, ABORT, 0, 0);
+      semantic_error (ATTR_OVERFLOW, ABORT, 0, 0);
     }
 
   ++attr_top;
@@ -503,7 +493,7 @@ symtbl_push (int is_marker, int name, int symtbl_index, int is_dummy)
 
   if (stack_top >= STACK_SIZE - 1)
     {
-      error_msg (STACK_OVERFLOW, ABORT, 0, 0);
+      semantic_error (STACK_OVERFLOW, ABORT, 0, 0);
     }
 
   ++stack_top;

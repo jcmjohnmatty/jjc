@@ -140,7 +140,7 @@ symtbl_init (void);
  * @todo Write this function.
  */
 void
-error_msg (int type, int action, int id, int symtbl_number);
+semantic_error (int type, int action, int id, int symtbl_number);
 
 /**
  * @brief Build a symbol table entry for id.
