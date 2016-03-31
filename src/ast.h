@@ -230,24 +230,6 @@ ast_set_left_subtree_operation (ast* T, int operation);
 void
 ast_set_right_subtree_operation (ast* T, int operation);
 
-/* /\** */
-/*  * @brief Set an <code>ast</code>'s left subtree. */
-/*  * */
-/*  * @param[in, out] tree The <code>ast</code> to set the left subtree of. */
-/*  * @param[in]      l    The new left subtree for <code>tree</code>. */
-/*  *\/ */
-/* void */
-/* ast_set_left_subtree (ast* tree, ast* l); */
-
-/* /\** */
-/*  * @brief Set an <code>ast</code>'s right subtree. */
-/*  * */
-/*  * @param[in, out] tree The <code>ast</code> to set the right subtree of. */
-/*  * @param[in]      r    The new right subtree for <code>tree</code>. */
-/*  *\/ */
-/* void */
-/* ast_set_right_subtree (ast* tree, ast* r); */
-
 /**
  * @brief Print an ast.
  *
