@@ -52,7 +52,7 @@ symtbl_init ()
   int symtbl_index;
 
   /* Get the index of the string "system". */
-  strtbl_index = loc_str("system");
+  strtbl_index = strtbl_get_index (string_table, "system");
 
   if (strtbl_index != -1)
     {
@@ -61,7 +61,7 @@ symtbl_init ()
       symtbl_set_attribute (symtbl_index, KIND_ATTR, CLASS);
     }
 
-  strtbl_index = loc_str("readln");
+  strtbl_index = strtbl_get_index (string_table, "readln");
   if (strtbl_index != -1)
     {
       symtbl_index = symtbl_insert_entry (strtbl_index);
@@ -70,7 +70,7 @@ symtbl_init ()
       symtbl_set_attribute (symtbl_index, KIND_ATTR, PROCE);
     }
 
-  strtbl_index = loc_str("println");
+  strtbl_index = strtbl_get_index (string_table, "println");
   if (strtbl_index != -1)
     {
       symtbl_index = symtbl_insert_entry (strtbl_index);
