@@ -109,6 +109,9 @@
 PROGRAM_DECLARATION
 : PROGRAM ID SEMI CLASS_DECLARATION_LIST
 {
+  // We only have to do this once...
+  symtbl_init ();
+
   $$ = ast_new (PROGRAMOP,
                 $4,
                 ast_make_leaf (IDNODE, $2));
@@ -131,26 +134,43 @@ CLASS_DECLARATION_LIST
 CLASS_DECLARATION
 : CLASS ID CLASS_BODY
 {
+  // Frist add the class entry.
+  symtbl_insert_entry ($2->left->data);
+
+  symtbl_set_attribute (symtbl_index, PREDE_ATTR, false);
+  symtbl_set_attribute (symtbl_index, TYPE_ATTR, field_declaration_type);
+  symtbl_set_attribute (symtbl_index, KIND_ATTR, CLASS);
+
   $$ = ast_new (CLASSDEFOP, $3, ast_make_leaf (IDNODE, $2));
+
+  symtbl_close_block ();
 }
 ;
 
 CLASS_BODY
-: LBRACE DECLARATION_LIST METHOD_DECLARATION_LIST RBRACE
+: LBRACE DECLARATION_LIST METHOD_DECLARATION_LIST2 RBRACE
 {
   $$ = ast_new (BODYOP, $2, $3);
+
+  symtbl_close_block ();
 }
 | LBRACE DECLARATION_LIST RBRACE
 {
   $$ = ast_new (BODYOP, $2, NULL);
+
+  symtbl_close_block ();
 }
-| LBRACE METHOD_DECLARATION_LIST RBRACE
+| LBRACE METHOD_DECLARATION_LIST2 RBRACE
 {
   $$ = ast_new (BODYOP, NULL, $2);
+
+  symtbl_close_block ();
 }
 | LBRACE RBRACE
 {
   $$ = NULL;
+
+  symtbl_close_block ();
 }
 ;
 
@@ -162,6 +182,8 @@ DECLARATION_LIST
 | DECLARATION FIELD_DECLARATION_LIST ENDDECLARATION
 {
   $$ = ast_new (BODYOP, NULL, $2);
+
+  symtbl_close_block ();
 }
 ;
 
@@ -218,10 +240,26 @@ VARIABLE_DECLARATION_OR_INITIALIZATION
 VARIABLE_DECLARATION_ID
 : ID
 {
+  symtbl_open_block ();
+
+  // Frist add the class entry.
+  symtbl_insert_entry ($1);
+
+  symtbl_set_attribute (symtbl_index, PREDE_ATTR, false);
+  symtbl_set_attribute (symtbl_index, TYPE_ATTR, field_declaration_type);
+  symtbl_set_attribute (symtbl_index, KIND_ATTR, VAR);
+
   $$ = ast_make_leaf (IDNODE, $1);
 }
 | VARIABLE_DECLARATION_ID LBRAC RBRAC
 {
+  // Frist add the class entry.
+  symtbl_insert_entry ($1);
+
+  symtbl_set_attribute (symtbl_index, PREDE_ATTR, false);
+  symtbl_set_attribute (symtbl_index, TYPE_ATTR, field_declaration_type);
+  symtbl_set_attribute (symtbl_index, KIND_ATTR, ARR);
+
   $$ = ast_new (INDEXOP, NULL, $1);
 }
 ;
@@ -293,6 +331,15 @@ EXPRESSION_INDEXING_LIST
     }
 }
 
+METHOD_DECLARATION_LIST2
+: METHOD_DECLARATION_LIST
+{
+  $$ = $1;
+
+  symtbl_close_block ();
+}
+;
+
 METHOD_DECLARATION_LIST
 : METHOD_DECLARATION
 {
@@ -319,6 +366,15 @@ TYPE_OR_VOID
 METHOD_DECLARATION
 : METHOD TYPE_OR_VOID ID LPAREN FORMAL_PARAMETER_LIST RPAREN BLOCK
 {
+  symtbl_close_block ();
+
+  // Frist add the class entry.
+  symtbl_insert_entry ($3);
+
+  symtbl_set_attribute (symtbl_index, PREDE_ATTR, false);
+  symtbl_set_attribute (symtbl_index, TYPE_ATTR, method_declaration_type);
+  symtbl_set_attribute (symtbl_index, KIND_ATTR, FUNC);
+
   ast* head_op = ast_new (HEADOP, ast_make_leaf (IDNODE, $3), $5);
   $$ = ast_new (METHODOP, head_op, $7);
 }
@@ -332,10 +388,14 @@ METHOD_DECLARATION
 FORMAL_PARAMETER_LIST
 : PARTIAL_PARAMETER_LIST
 {
+  symtbl_close_block ();
+
   $$ = ast_new (SPECOP, $1, method_declaration_type);
 }
 | FORMAL_PARAMETER_LIST SEMI PARTIAL_PARAMETER_LIST
 {
+  symtbl_close_block ();
+
   $$ = ast_set_right_subtree ($1, $3);
 }
 ;
@@ -362,12 +422,40 @@ ID_LIST
 PARTIAL_PARAMETER_LIST
 : VAL INT ID_LIST
 {
+  symtbl_open_block ();
+
+  ast* t = $3;
+  ast* int_type = ast_make_leaf (INTEGERTNODE, $2);
+  while (t->left != NULL)
+    {
+      // Frist add the class entry.
+      symtbl_insert_entry (t->data);
+
+      symtbl_set_attribute (symtbl_index, PREDE_ATTR, false);
+      symtbl_set_attribute (symtbl_index, TYPE_ATTR, int_type);
+      symtbl_set_attribute (symtbl_index, KIND_ATTR, VALUE_ARG);
+    }
+
   ast_set_operation ($3, VARGTYPEOP);
   ast_set_right_subtree_operation ($3, VARGTYPEOP);
   $$ = $3;
 }
 | INT ID_LIST
 {
+  symtbl_open_block ();
+
+  ast* t = $2;
+  ast* int_type = ast_make_leaf (INTEGERTNODE, $1);
+  while (t->left != NULL)
+    {
+      // Frist add the class entry.
+      symtbl_insert_entry (t->data);
+
+      symtbl_set_attribute (symtbl_index, PREDE_ATTR, false);
+      symtbl_set_attribute (symtbl_index, TYPE_ATTR, int_type);
+      symtbl_set_attribute (symtbl_index, KIND_ATTR, REF_ARG);
+    }
+
   $$ = $2;
 }
 ;
