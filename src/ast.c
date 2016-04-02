@@ -21,6 +21,8 @@ ast_make_leaf (int type, int d)
   ast* p;
 
   p = (ast*) malloc (sizeof (ast));
+  p->left = NULL;
+  p->right = NULL;
   p->node_type = type;
   p->data = d;
   return p;
