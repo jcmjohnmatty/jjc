@@ -5,6 +5,36 @@
 #define JJC_ERR_ERROR   1
 #define JJC_ERR_FATAL   2
 
+/*
+ * error type for error reporting routine
+ */
+
+#define SYMTBL_OVERFLOW 100
+#define REDECLARATION 101
+#define STACK_OVERFLOW 102
+#define UNDECLARATION 103
+#define ATTR_OVERFLOW 104
+#define NOT_USED 105
+#define ARGUMENTS_NUM1 106
+#define ARGUMENTS_NUM2 107
+#define BOUND 108
+#define PROCE_MISMATCH 109
+#define VAR_VAL 110
+#define CONSTANT_VAR 111
+#define EXPR_VAR 112
+#define CONSTANT_ASSIGN 113
+#define INDX_MIS 114
+#define FIELD_MIS 115
+#define FORW_REDECLARE 116
+#define REC_TYPE_MIS 117
+#define ARR_TYPE_MIS 118
+#define VARIABLE_MIS 119
+#define FUNC_MISMATCH 120
+#define TYPE_MIS 121
+#define NOT_TYPE 122
+#define ARR_DIME_MIS 123
+#define MULTI_MAIN 124
+
 extern int jjc_errno;
 
 /**
@@ -22,6 +52,15 @@ int
 error_line_column (int         line,
                    int         column,
                    const char* message);
+
+/**
+ *
+ */
+int
+semantic_error (int type,
+                int action,
+                int id,
+                int symtbl_number);
 
 /**
  * @return An appropriately defined macro indicating the severity.
