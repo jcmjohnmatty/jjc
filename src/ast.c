@@ -133,7 +133,7 @@ ast_set_right_subtree (ast* tree, ast* right)
   q = ast_get_right (p);
 
   /* Replace the rightmost DUMMYNODE. */
-  while (q != NULL && 1->node_type != DUMMYNODE)
+  while (q != NULL && q->node_type != DUMMYNODE)
     {
       p = q;
       q = ast_get_right (p);

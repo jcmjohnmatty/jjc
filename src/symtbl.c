@@ -31,6 +31,79 @@ int nesting = 0;
 /* attribute array counter */
 int attr_top = 0;
 
+void
+_symtbl_process_declaration_block (ast* declarations)
+{
+  /* Get to the declarations first. */
+  while (!ast_is_null (declarations))
+    {
+      /* Process. */
+      ast* field_declaration;
+      ast* field_declaration_type;
+      int symtbl_index;
+      int id;
+
+      field_declaration = declarations->right;
+
+      if (ast_is_null (field_declarations))
+        {
+          error_line_column (field_declarations->line,
+                             field_declarations->column,
+                             "empty field declaration");
+          /* Let's find more errors!!! */
+          declarations = declarations->left;
+          continue;
+        }
+
+      /* Process the field declaration. */
+      field_declaration_type = field_declaration->right->left;
+
+      if (field_declaration->left->node_type == IDNODE)
+        {
+          symtbl_index =
+            symtbl_insert_entry (field_declaration->left->data);
+          symtbl_set_attribute (symtbl_index, TREE_ATTR,
+                                field_declaration);
+          symtbl_set_attribute (symtbl_index, TYPE_ATTR,
+                                field_declaration_type);
+          symtbl_set_attribute (symtbl_index, PREDE_ATTR, 0);
+          symtbl_set_attribute (symtbl_index, KIND_ATTR, VAR);
+        }
+      else if (field_declaration->left->node_type == INDEXOP)
+        {
+          ast* variable_declaration_id = field_declaration;
+          int dim = 0;
+          do
+            {
+              variable_declaration_id = variable_declaration_id->right;
+              ++dim;
+            }
+          while (variable_declaration_id->operation_type != IDNODE)
+
+          int symtbl_index
+            = symtbl_insert_entry (field_declaration_id->data);
+          symtbl_set_attribute (symtbl_index, TREE_ATTR,
+                                field_declaration);
+          symtbl_set_attribute (symtbl_index, PREDE_ATTR, 0);
+          symtbl_set_attribute (symtbl_index, TYPE_ATTR, field_declaration_type);
+          symtbl_set_attribute (symtbl_index, KIND_ATTR, ARR);
+          symtbl_set_attribute (symtbl_index, DIMEN_ATTR, dim);
+        }
+      else
+        {
+          char message[64];
+          sprintf (message, "illegal variable with node type %d",
+                   field_declaration->left->node_type);
+          error_line_column (field_declaration->line,
+                             field_declaration->column,
+                             message);
+        }
+
+      /* Finally, get the next declaration. */
+      declarations = declarations->left;
+    }
+}
+
 /** @todo More descriptive error codes? */
 void
 symtbl_construct (const ast* const root)
@@ -91,8 +164,6 @@ symtbl_construct (const ast* const root)
         }
       else
         {
-          ast* declarations;
-
           /*
            * Declarations are all the way down in the tree for some reason, and
            * as a result, we need to search for them.
@@ -104,74 +175,7 @@ symtbl_construct (const ast* const root)
             }
           while (!ast_is_null (declarations) && declarations->operation_type != DECLOP);
 
-          /* Get to the declarations first. */
-          while (!ast_is_null (declarations))
-            {
-              /* Process. */
-              ast* field_declaration;
-              ast* field_declaration_type;
-              int symtbl_index;
-              int id;
-
-              field_declaration = declarations->right;
-
-              if (ast_is_null (field_declarations))
-                {
-                  error_line_column (field_declarations->line,
-                                     field_declarations->column,
-                                     "empty field declaration");
-                  /* Let's find more errors!!! */
-                  declarations = declarations->left;
-                  continue;
-                }
-
-              /* Process the field declaration. */
-              field_declaration_type = field_declaration->right->left;
-
-              if (field_declaration->left->node_type == IDNODE)
-                {
-                  symtbl_index =
-                    symtbl_insert_entry (field_declaration->left->data);
-                  symtbl_set_attribute (symtbl_index, TREE_ATTR,
-                                        field_declaration);
-                  symtbl_set_attribute (symtbl_index, TYPE_ATTR,
-                                        field_declaration_type);
-                  symtbl_set_attribute (symtbl_index, PREDE_ATTR, 0);
-                  symtbl_set_attribute (symtbl_index, KIND_ATTR, VAR);
-                }
-              else if (field_declaration->left->node_type == INDEXOP)
-                {
-                  ast* variable_declaration_id = field_declaration;
-                  int dim = 0;
-                  do
-                    {
-                      variable_declaration_id = variable_declaration_id->right;
-                      ++dim;
-                    }
-                  while (variable_declaration_id->operation_type != IDNODE)
-
-                  int symtbl_index
-                    = symtbl_insert_entry (field_declaration_id->data);
-                  symtbl_set_attribute (symtbl_index, TREE_ATTR,
-                                        field_declaration);
-                  symtbl_set_attribute (symtbl_index, PREDE_ATTR, 0);
-                  symtbl_set_attribute (symtbl_index, TYPE_ATTR, field_declaration_type);
-                  symtbl_set_attribute (symtbl_index, KIND_ATTR, ARR);
-                  symtbl_set_attribute (symtbl_index, DIMEN_ATTR, dim);
-                }
-              else
-                {
-                  char message[64];
-                  sprintf (message, "illegal variable with node type %d",
-                           field_declaration->left->node_type);
-                  error_line_column (field_declaration->line,
-                                     field_declaration->column,
-                                     message);
-                }
-
-              /* Finally, get the next declaration. */
-              declarations = declarations->left;
-            }
+          _symtbl_process_declaration_block (declaration);
 
           /* Now, process the methods. */
           ast* t = class_body;
@@ -224,6 +228,9 @@ symtbl_construct (const ast* const root)
                     }
                   t = t->right;
                 }
+
+              /* Finally, process the block declarations, if there are any. */
+              _symtbl_process_declaration_block (method_declaration->right->left);
 
               symtbl_close_block ();
 
