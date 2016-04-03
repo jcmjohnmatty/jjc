@@ -138,13 +138,11 @@ _symtbl_process_variable (ast* variable)
 }
 
 int
-_symtbl_process_expression (ast* expression)
+_symtbl_process_type(ast* type)
 {
-  /* Finally, return the dimensions of expression. */
-  return -2;
 }
 
-void
+int
 _symtbl_process_methodcall (ast* methodcall)
 {
   int num_args = 0;
@@ -208,6 +206,154 @@ _symtbl_process_methodcall (ast* methodcall)
       sprintf (message, "expected %d arguments, got %d", real_num_args, num_args);
       error_line_column (methodcall->line, methodcall->column, message);
     }
+
+  return symtbl_get_attribute (methodcall_symtbl_index, DIMEN_ATTR);
+}
+
+int
+_symtbl_process_unsigned_constant (ast* unsigned_constant)
+{
+}
+
+int
+_symtbl_process_routinecall (ast* routinecall);
+
+int
+_symtbl_process_expression (ast* expression);
+
+int
+_symtbl_process_factor (ast* factor)
+{
+  int dim = -20;
+  int operation_type = factor->operation_type;
+  /* Check based on the factor type. */
+  switch (operation_type)
+    {
+    case UNSIGNED_CONSTANT:
+      return 0;
+
+    case VAROP:
+      dim = _symtbl_process_variable (factor);
+      break;
+
+    case ROUTINECALLOP:
+      dim = _symtbl_process_routinecall (factor);
+      break;
+
+    case UNARYNEGOP:
+      dim = _symtbl_process_factor (factor->left);
+      break;
+
+    /* Any of these are an expression. */
+    case ASSIGNOP:
+    case ROUTINECALLOP:
+    case RETURNOP:
+    case IFELSEOP:
+    case LOOPOP:
+    case LTOP:
+    case LEOP:
+    case EQOP:
+    case NEOP:
+    case GEOP:
+    case GTOP:
+      dim = _symtbl_process_expression (factor);
+      break;
+
+    default:
+      char message[64];
+      sprintf (message, "unrecognized operation %d",
+               statement->operation_type);
+      error_line_column (statement->line,
+                         statement->column,
+                         message);
+      break;
+    }
+
+  return dim;
+}
+
+int
+_symtbl_process_term (ast* term)
+{
+  int rhs_dim = -12;
+  int lhs_dim = -13;
+
+  /** @todo Check if term->right is NULL? */
+  rhs_dim = _symtbl_process_factor (term->right);
+
+  if (ast_is_null (term->left))
+    {
+      lhs_dim = _symtbl_process_factor (term);
+    }
+  else
+    {
+      lhs_dim = _symtbl_process_term (term->left);
+    }
+
+  if (rhs_dim != lhs_dim)
+    {
+      error_line_column (term->line, term->column, "dimension mismatch");
+      return -14;
+    }
+
+  return lhs_dim;
+}
+
+int
+_symtbl_process_simple_expression (ast* simple_expression)
+{
+  int rhs_dim = -9;
+  int lhs_dim = -10;
+
+  /** @todo Check if term->right is NULL? */
+  if (simple_expression->operation_type == UNARYNEGOP)
+    {
+      rhs_dim = _symtbl_process_term (simple_expression->right->left);
+    }
+  else
+    {
+      rhs_dim = _symtbl_process_term (simple_expression->right);
+    }
+
+  if (ast_is_null (simple_expression->left))
+    {
+      lhs_dim = _symtbl_process_term (term);
+    }
+  else
+    {
+      lhs_dim = _symtbl_process_simple_expression (simple_expression->left);
+    }
+
+  if (rhs_dim != lhs_dim)
+    {
+      error_line_column (simple_expression->line, simple_expression->column, "dimension mismatch");
+      return -11;
+    }
+
+  return lhs_dim;
+}
+
+/** @note All expressions are 0 dimensional (scalars). */
+int
+_symtbl_process_expression (ast* expression)
+{
+  int left_dim = _symtbl_process_simple_expression (expression->left);
+  int right_dim = -7;
+  if (!ast_is_null (expression->right))
+    {
+      right_dim = _symtbl_process_simple_expression (expression->right);
+
+      if (left_dim != right_dim)
+        {
+          error_line_column (expression->line, expression-colmn,
+                             "dimension mismatch");
+          /* Return some invalid value. */
+          return -8;
+        }
+    }
+
+  /* Finally, return the dimensions of expression. */
+  return left_dim;
 }
 
 void
@@ -412,6 +558,8 @@ symtbl_construct (const ast* const root)
                   method_declaration_type = NULL;
                 }
 
+              int return_dim = _symtbl_process_type (method_declaration_type);
+
               int symtbl_index =
                 symtbl_insert_entry (method_declaration->left->left->data,
                                      method_declaration->left->left->line,
@@ -422,6 +570,7 @@ symtbl_construct (const ast* const root)
                                     method_declaration_type);
               symtbl_set_attribute (symtbl_index, PREDE_ATTR, 0);
               symtbl_set_attribute (symtbl_index, KIND_ATTR, FUNC);
+              symtbl_set_attribute (symtbl_index, DIMEN_ATTR, return_dim);
               /* Open a new block and put in the variables in the method. */
               symtbl_open_block ();
 
