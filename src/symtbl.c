@@ -31,6 +31,9 @@ int nesting = 0;
 /* attribute array counter */
 int attr_top = 0;
 
+extern int yyline;
+extern int yycolumn;
+
 void
 _symtbl_process_declaration_block (ast* declarations)
 {
@@ -39,9 +42,6 @@ _symtbl_process_declaration_block (ast* declarations)
     {
       /* Process. */
       ast* field_declaration;
-      ast* field_declaration_type;
-      int symtbl_index;
-      int id;
 
       field_declaration = declarations->right;
 
@@ -55,53 +55,84 @@ _symtbl_process_declaration_block (ast* declarations)
           continue;
         }
 
-      /* Process the field declaration. */
-      field_declaration_type = field_declaration->right->left;
+      while (!ast_is_null (field_declaration))
+        {
+          ast* variable = field_declaration->right;
+          ast* variable_type;
+          int symtbl_index;
+          int id;
 
-      if (field_declaration->left->node_type == IDNODE)
-        {
-          symtbl_index =
-            symtbl_insert_entry (field_declaration->left->data);
-          symtbl_set_attribute (symtbl_index, TREE_ATTR,
-                                field_declaration);
-          symtbl_set_attribute (symtbl_index, TYPE_ATTR,
-                                field_declaration_type);
-          symtbl_set_attribute (symtbl_index, PREDE_ATTR, 0);
-          symtbl_set_attribute (symtbl_index, KIND_ATTR, VAR);
-        }
-      else if (field_declaration->left->node_type == INDEXOP)
-        {
-          ast* field_declaration_id = field_declaration;
-          int dim = 0;
-          do
+          if (ast_is_null (variable))
             {
-              field_declaration_id = field_declaration_id->right;
-              ++dim;
+              error_line_column (variable->line,
+                                 variable->column,
+                                 "empty variable declaration");
+              /* Let's find more errors!!! */
+              field_declaration = field_declaration->left;
+              continue;
             }
-          while (field_declaration_id->operation_type != IDNODE);
 
-          int symtbl_index =
-            symtbl_insert_entry (field_declaration_id->data);
-          symtbl_set_attribute (symtbl_index, TREE_ATTR,
-                                field_declaration);
-          symtbl_set_attribute (symtbl_index, PREDE_ATTR, 0);
-          symtbl_set_attribute (symtbl_index, TYPE_ATTR, field_declaration_type);
-          symtbl_set_attribute (symtbl_index, KIND_ATTR, ARR);
-          symtbl_set_attribute (symtbl_index, DIMEN_ATTR, dim);
-        }
-      else
-        {
-          char message[64];
-          sprintf (message, "illegal variable with node type %d",
-                   field_declaration->left->node_type);
-          error_line_column (field_declaration->line,
-                             field_declaration->column,
-                             message);
+          /* Process the field declaration. */
+          variable_type = variable->right->left;
+          variable = variable->left;
+
+          if (variable->operation_type == 0)
+            {
+              symtbl_index =
+                symtbl_insert_entry (variable->data,
+                                     variable->line,
+                                     variable->column);
+              symtbl_set_attribute (symtbl_index, TREE_ATTR,
+                                    variable);
+              symtbl_set_attribute (symtbl_index, TYPE_ATTR,
+                                    variable_type);
+              symtbl_set_attribute (symtbl_index, PREDE_ATTR, 0);
+              symtbl_set_attribute (symtbl_index, KIND_ATTR, VAR);
+            }
+          else if (variable->left->operation_type == COMMAOP)
+            {
+              ast* variable_declaration_id = variable;
+              int dim = 0;
+              do
+                {
+                  variable_declaration_id = variable_declaration_id->right;
+                  ++dim;
+                }
+              while (variable_declaration_id->operation_type != 0);
+
+              int symtbl_index =
+                symtbl_insert_entry (variable->data,
+                                     variable->line,
+                                     variable->column);
+              symtbl_set_attribute (symtbl_index, TREE_ATTR,
+                                    variable_declaration_id);
+              symtbl_set_attribute (symtbl_index, PREDE_ATTR, 0);
+              symtbl_set_attribute (symtbl_index, TYPE_ATTR, variable_type);
+              symtbl_set_attribute (symtbl_index, KIND_ATTR, ARR);
+              symtbl_set_attribute (symtbl_index, DIMEN_ATTR, dim);
+            }
+          else
+            {
+              char message[64];
+              sprintf (message, "illegal variable with node type %d",
+                       variable->left->node_type);
+              error_line_column (variable->line,
+                                 variable->column,
+                                 message);
+            }
+
+          /* Get the next field declaration. */
+          field_declaration = field_declaration->left;
         }
 
       /* Finally, get the next declaration. */
       declarations = declarations->left;
     }
+}
+
+void
+_symtbl_process_method_statements (ast* statements)
+{
 }
 
 /** @todo More descriptive error codes? */
@@ -138,7 +169,9 @@ symtbl_construct (const ast* const root)
   while (!ast_is_null (class_declaration))
     {
       /* First, add the entry. */
-      int symtbl_index = symtbl_insert_entry (class_declaration->data);
+      int symtbl_index = symtbl_insert_entry (class_declaration->right->right->data,
+                                              class_declaration->line,
+                                              class_declaration->column);
       symtbl_set_attribute (symtbl_index, TREE_ATTR, class_declaration);
       symtbl_set_attribute (symtbl_index, PREDE_ATTR, 0);
       symtbl_set_attribute (symtbl_index, KIND_ATTR, CLASS_KIND);
@@ -146,7 +179,7 @@ symtbl_construct (const ast* const root)
       symtbl_open_block ();
 
       /* Process the class declaration. */
-      ast* class_body = class_declaration->left;
+      ast* class_body = class_declaration->right;
 
       /* Process the class body. */
 
@@ -168,20 +201,30 @@ symtbl_construct (const ast* const root)
            * Declarations are all the way down in the tree for some reason, and
            * as a result, we need to search for them.
            */
-          ast* declarations;
+          ast* declarations = class_body;
+          // int has_field_declaration;
           do
             {
-              declarations = class_body->left;
+              /* if (!ast_is_null (declarations->right)) */
+              /*   { */
+              /*     has_field_declaration = declarations->right; */
+              /*   } */
+              declarations = declarations->left;
             }
-          while (!ast_is_null (declarations) && declarations->operation_type != DECLOP);
+          while (declarations->left->right->operation_type != DECLOP);
+          declarations = declarations->left;
 
           _symtbl_process_declaration_block (declarations);
 
           /* Now, process the methods. */
-          ast* t = class_body;
+          ast* t = class_body->left;
           while (!ast_is_null (t) && t->operation_type == BODYOP)
             {
-              ast* method_declaration = t->left;
+              ast* method_declaration = t->right;
+              if (method_declaration->operation_type == DECLOP)
+                {
+                  break;
+                }
 
               /*
                * Empty method declarations are legal, so if we have one just
@@ -194,31 +237,44 @@ symtbl_construct (const ast* const root)
                 }
 
               /* Put the name in our symbol table. */
-              ast* method_declaration_type =
-                method_declaration->left->right->right;
+              ast* method_declaration_type;
+
+              if (!ast_is_null (method_declaration->left->right))
+                {
+                  method_declaration_type =
+                    method_declaration->left->right->right;
+                }
+              else
+                {
+                  method_declaration_type = NULL;
+                }
+
               int symtbl_index =
-                symtbl_insert_entry (method_declaration->left->left->data);
+                symtbl_insert_entry (method_declaration->left->left->data,
+                                     method_declaration->left->left->line,
+                                     method_declaration->left->left->column);
               symtbl_set_attribute (symtbl_index, TREE_ATTR,
                                     method_declaration);
               symtbl_set_attribute (symtbl_index, TYPE_ATTR,
                                     method_declaration_type);
               symtbl_set_attribute (symtbl_index, PREDE_ATTR, 0);
               symtbl_set_attribute (symtbl_index, KIND_ATTR, FUNC);
-
               /* Open a new block and put in the variables in the method. */
-
               symtbl_open_block ();
 
-              ast* t = method_declaration->right->left->left;
+              ast* parameter_list = method_declaration->left->right->left;
               ast* int_type = ast_make_leaf (INTEGERTNODE, INT);
-              while (!ast_is_null (t))
+
+              while (!ast_is_null (parameter_list))
                 {
                   // Frist add the class entry.
-                  int symtbl_index = symtbl_insert_entry (t->left->left->data);
+                  int symtbl_index = symtbl_insert_entry (parameter_list->left->left->data,
+                                                          parameter_list->left->left->line,
+                                                          parameter_list->left->left->column);
 
                   symtbl_set_attribute (symtbl_index, PREDE_ATTR, 0);
                   symtbl_set_attribute (symtbl_index, TYPE_ATTR, int_type);
-                  if (t->operation_type == VARGTYPEOP)
+                  if (parameter_list->operation_type == VARGTYPEOP)
                     {
                       symtbl_set_attribute (symtbl_index, KIND_ATTR, VALUE_ARG);
                     }
@@ -226,11 +282,12 @@ symtbl_construct (const ast* const root)
                     {
                       symtbl_set_attribute (symtbl_index, KIND_ATTR, REF_ARG);
                     }
-                  t = t->right;
+                  parameter_list = parameter_list->right;
                 }
 
               /* Finally, process the block declarations, if there are any. */
               _symtbl_process_declaration_block (method_declaration->right->left);
+              _symtbl_process_method_statements (method_declaration->right->right);
 
               symtbl_close_block ();
 
@@ -256,7 +313,7 @@ symtbl_init (void)
 
   if (strtbl_index != -1)
     {
-      symtbl_index = symtbl_insert_entry (strtbl_index);
+      symtbl_index = symtbl_insert_entry (strtbl_index, -1, -1);
       symtbl_set_attribute (symtbl_index, PREDE_ATTR, 1);
       symtbl_set_attribute (symtbl_index, KIND_ATTR, CLASS_KIND);
     }
@@ -264,7 +321,7 @@ symtbl_init (void)
   strtbl_index = strtbl_get_index (string_table, "readln");
   if (strtbl_index != -1)
     {
-      symtbl_index = symtbl_insert_entry (strtbl_index);
+      symtbl_index = symtbl_insert_entry (strtbl_index, -1, -1);
       symtbl_set_attribute (symtbl_index, NEST_ATTR, nesting + 1);
       symtbl_set_attribute (symtbl_index, PREDE_ATTR, 1);
       symtbl_set_attribute (symtbl_index, KIND_ATTR, PROCE);
@@ -273,7 +330,7 @@ symtbl_init (void)
   strtbl_index = strtbl_get_index (string_table, "println");
   if (strtbl_index != -1)
     {
-      symtbl_index = symtbl_insert_entry (strtbl_index);
+      symtbl_index = symtbl_insert_entry (strtbl_index, -1, -1);
       symtbl_set_attribute (symtbl_index, NEST_ATTR, nesting + 1);
       symtbl_set_attribute (symtbl_index, PREDE_ATTR, 1);
       symtbl_set_attribute (symtbl_index, KIND_ATTR, PROCE);
@@ -281,18 +338,18 @@ symtbl_init (void)
 }
 
 int
-symtbl_insert_entry (int id)
+symtbl_insert_entry (int id, int line, int column)
 {
   /* id is already declared in the current block. */
   if (symtbl_lookup_here (id))
     {
-      semantic_error (REDECLARATION, CONTINUE, id, 0);
+      semantic_error (REDECLARATION, CONTINUE, id, 0, line, column);
       return 0;
     }
 
   if (symtbl_top >= SYMTBL_SIZE - 1)
     {
-      semantic_error (SYMTBL_OVERFLOW, ABORT, 0 , 0);
+      semantic_error (SYMTBL_OVERFLOW, ABORT, 0 , 0, line, column);
     }
 
   ++symtbl_top;
@@ -304,7 +361,7 @@ symtbl_insert_entry (int id)
 }
 
 int
-symtbl_lookup (int id)
+symtbl_lookup (int id, int line, int column)
 {
   int i;
 
@@ -318,7 +375,7 @@ symtbl_lookup (int id)
     }
 
   /* id is undefined, push a dummy element onto stack. */
-  semantic_error (UNDECLARATION, CONTINUE, id, 0);
+  semantic_error (UNDECLARATION, CONTINUE, id, 0, line, column);
   symtbl_push (0, id, 0, 1);
   return 0;
 }
@@ -434,7 +491,7 @@ symtbl_set_attribute (int symtbl_index, int attribute_number, int attribute_valu
 
   if (attr_top >= ATTR_SIZE-1)
     {
-      semantic_error (ATTR_OVERFLOW, ABORT, 0, 0);
+      semantic_error (ATTR_OVERFLOW, ABORT, 0, 0, 0, 0);
     }
 
   ++attr_top;
@@ -548,7 +605,7 @@ symtbl_push (int is_marker, int name, int symtbl_index, int is_dummy)
 
   if (stack_top >= STACK_SIZE - 1)
     {
-      semantic_error (STACK_OVERFLOW, ABORT, 0, 0);
+      semantic_error (STACK_OVERFLOW, ABORT, 0, 0, 0, 0);
     }
 
   ++stack_top;

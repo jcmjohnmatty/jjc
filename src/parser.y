@@ -147,9 +147,10 @@ CLASS_DECLARATION
 CLASS_BODY
 : LBRACE DECLARATION_LIST METHOD_DECLARATION_LIST2 RBRACE
 {
-  $$ = ast_new (BODYOP, $2, $3);
-  $$->line = yyline;
-  $$->column = yycolumn;
+  $$ = ast_set_left_subtree ($3, $2);
+  /* $$ = ast_new (BODYOP, $2, $3); */
+  /* $$->line = yyline; */
+  /* $$->column = yycolumn; */
 }
 | LBRACE DECLARATION_LIST RBRACE
 {
@@ -180,23 +181,25 @@ DECLARATION_LIST
 }
 | DECLARATION FIELD_DECLARATION_LIST ENDDECLARATION
 {
-  $$ = ast_new (BODYOP, NULL, $2);
-  $$->line = yyline;
-  $$->column = yycolumn;
+  $$ = $2;
+  /* $$ = ast_new (BODYOP, NULL, $2); */
+  /* $$->line = yyline; */
+  /* $$->column = yycolumn; */
 }
 ;
 
 FIELD_DECLARATION_LIST
 : VARIABLE_DECLARATION_OR_INITIALIZATION_STATEMENT
 {
-  $$ = ast_new (DECLOP, NULL, $1);
+  $$ = ast_new (BODYOP, NULL, $1);
   $$->line = yyline;
   $$->column = yycolumn;
 }
 | FIELD_DECLARATION_LIST VARIABLE_DECLARATION_OR_INITIALIZATION_STATEMENT
 {
-  $$ = ast_new (DECLOP, NULL, NULL);
-  $$ = ast_set_right_subtree ($$, $2);
+  $$ = ast_new (BODYOP, NULL, $2);
+  $$->line = yyline;
+  $$->column = yycolumn;
   if (!ast_is_null ($1))
     {
       $$ = ast_set_left_subtree ($1, $$);
@@ -379,7 +382,8 @@ METHOD_DECLARATION
 }
 | METHOD TYPE_OR_VOID ID LPAREN RPAREN BLOCK
 {
-  ast* head_op = ast_new (HEADOP, ast_make_leaf (IDNODE, $3), NULL);
+  ast* head_op = ast_new (HEADOP, ast_make_leaf (IDNODE, $3),
+                          ast_new (SPECOP, $1, method_declaration_type));
   $$ = ast_new (METHODOP, head_op, $6);
   $$->line = yyline;
   $$->column = yycolumn;
@@ -431,7 +435,7 @@ ID_LIST
   third_id_node->line = yyline;
   third_id_node->column = yycolumn;
 
-  $$ = ast_set_left_subtree ($1, third_id_node);
+  $$ = ast_set_right_subtree ($1, third_id_node);
 }
 ;
 

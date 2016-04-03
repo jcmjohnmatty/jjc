@@ -52,7 +52,7 @@ strtbl_put (strtbl* stbl, char* string)
         {
           tmp = malloc (stbl->buffer_length + strlen (string) + 1);
           int i;
-          for (i = 0; i < stbl->buffer_length; ++i)
+          for (i = 0; i <= stbl->buffer_length; ++i)
             {
               tmp[i] = stbl->buffer[i];
             }
@@ -67,7 +67,7 @@ strtbl_put (strtbl* stbl, char* string)
         {
           tmpi = malloc ((stbl->n_strings + 1) * sizeof (int));
           int i;
-          for (i = 0; i < stbl->n_strings; ++i)
+          for (i = 0; i <= stbl->n_strings; ++i)
             {
               tmpi[i] = stbl->str_indices[i];
             }
@@ -129,7 +129,6 @@ strtbl_contains_value (strtbl* stbl, char* string)
       if (strncmp ((char*) (stbl->buffer + start), string, length) == 0
           && stbl->buffer[start + length] == '\0')
         {
-            printf ("strtbl_contains_value: %d\n", 1);
           return 1;
         }
       while (stbl->buffer[start] != '\0')

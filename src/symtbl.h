@@ -103,7 +103,7 @@ symtbl_init (void);
  * nesting level attributes are set by this function.
  */
 int
-symtbl_insert_entry (int id);
+symtbl_insert_entry (int id, int line, int column);
 
 /**
  * @brief Search an id in the stack and return a pointer to the symbol table
@@ -113,7 +113,7 @@ symtbl_insert_entry (int id);
  * stack so that the same error will not be reported again.
  */
 int
-symtbl_lookup (int id);
+symtbl_lookup (int id, int line, int column);
 
 /**
  * @brief Search an id in the stack for the current block.

@@ -69,7 +69,9 @@ int
 semantic_error (int type,
                 int action,
                 int id,
-                int symtbl_number);
+                int symtbl_number,
+                int line,
+                int column);
 
 /**
  * @return An appropriately defined macro indicating the severity.

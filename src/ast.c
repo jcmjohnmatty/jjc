@@ -18,6 +18,7 @@ ast_make_leaf (int type, int d)
   p->right = NULL;
   p->line = -1;
   p->column = -1;
+  p->operation_type = 0;
   p->node_type = type;
   p->data = d;
   return p;
@@ -168,7 +169,7 @@ ast_get_data (ast* tree)
 int
 ast_is_null (ast* tree)
 {
-  return (tree == NULL) || (tree->node_type == DUMMYNODE);
+    return (tree < 0x100) || (tree == NULL) || (tree->node_type == DUMMYNODE);
 }
 
 void
@@ -284,6 +285,14 @@ ast_print2 (ast* tree, int depth)
       zerocrosses ();
       printf ("************* SYNTAX TREE PRINTOUT ***********\n\n");
     }
+
+  /* Void. */
+  if (tree < 0x100)
+    {
+      indent (depth);
+      printf ("[VOIDTYPEIDOP]\n");
+      return;
+    }
   if (tree == NULL || tree->node_type == DUMMYNODE)
     {
       indent (depth);
@@ -291,13 +300,6 @@ ast_print2 (ast* tree, int depth)
       return;
     }
 
-  /* Void. */
-  if (tree == 0x24)
-    {
-      indent (depth);
-      printf ("[VOIDTYPEIDOP]\n");
-      return;
-    }
   if (tree->node_type == EXPRNODE)
     {
       ast_print2 (ast_get_right (tree), depth + 1);

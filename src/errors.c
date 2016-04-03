@@ -36,11 +36,13 @@ int
 semantic_error (int type,
                 int action,
                 int id,
-                int symtbl_number)
+                int symtbl_number,
+                int line,
+                int column)
 {
   char* s;
 
-  fprintf (stderr, "%s:%d:%d: error: ", sourcefile, yyline, yycolumn);
+  fprintf (stderr, "%s:%d:%d: error: ", sourcefile, line, column);
   switch (type)
     {
     case STACK_OVERFLOW:

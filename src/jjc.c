@@ -16,7 +16,7 @@ static const char* version_no = "1.0.0";
 static struct option long_options[] =
   {
     {"verbose", no_argument, 0, 'V'},
-	{"version", no_argument, 0, 'v'},
+    {"version", no_argument, 0, 'v'},
     {"brief",   no_argument, 0, 'b'},
     {"help",    no_argument, 0, 'h'},
     {0, 0, 0, 0}
@@ -47,34 +47,34 @@ main (int argc, char* argv[]) {
         case 'V':
           if (verbose_flag == 0)
             {
-			  fprintf (stderr, "jjc: fatal error: brief flag already set\n");
-			  print_usage ();
-			  exit (1);
+        fprintf (stderr, "jjc: fatal error: brief flag already set\n");
+        print_usage ();
+        exit (1);
             }
           verbose_flag = 1;
           break;
 
-		case 'v':
-		  print_version ();
-		  exit (0);
-		  break;
+    case 'v':
+      print_version ();
+      exit (0);
+      break;
 
         case 'b':
           if (verbose_flag == 1)
             {
-			  fprintf (stderr, "jjc: fatal error: verbose flag already set\n");
-			  print_usage ();
-			  exit (1);
+        fprintf (stderr, "jjc: fatal error: verbose flag already set\n");
+        print_usage ();
+        exit (1);
             }
           break;
 
         case 'h':
-		  print_usage ();
+      print_usage ();
           exit (0);
           break;
 
         case '?':
-		  fprintf (stderr, "jjc: fatal error: unrecognized flag `-%s'\n", c);
+      fprintf (stderr, "jjc: fatal error: unrecognized flag `-%s'\n", c);
           break;
 
         default:
@@ -111,18 +111,21 @@ main (int argc, char* argv[]) {
       yyparse ();
 
       symtbl_construct (root);
+
+      symtbl_print ();
+      ast_print (root);
     }
   else
-	{
-	  fprintf (stderr, "jjc: fatal error: missing input file\n");
-	  print_usage ();
-	  exit (1);
-	}
+  {
+    fprintf (stderr, "jjc: fatal error: missing input file\n");
+    print_usage ();
+    exit (1);
+  }
 
   if (jjc_errno > 0)
-	{
-	  exit (1);
-	}
+  {
+    exit (1);
+  }
 
   return 0;
 }
