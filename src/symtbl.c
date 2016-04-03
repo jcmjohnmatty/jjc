@@ -130,9 +130,172 @@ _symtbl_process_declaration_block (ast* declarations)
     }
 }
 
+int
+_symtbl_process_variable (ast* variable)
+{
+  /* Finally, return the dimensions of variable. */
+  return -1;
+}
+
+int
+_symtbl_process_expression (ast* expression)
+{
+  /* Finally, return the dimensions of expression. */
+  return -2;
+}
+
+void
+_symtbl_process_methodcall (ast* methodcall)
+{
+  int num_args = 0;
+  int var_dim = -5;
+  int dim = -1;
+  int methodcall_symtbl_index = -4;
+
+  /* Check the variable we are calling the method from. */
+  var_dim = _symtbl_check_variable (methodcall->left);
+
+  if (var_dim > 0)
+    {
+      error_line_column (methodcall->line, methodcall->column,
+                         "unable to call method on array");
+    }
+
+  /* Get the index in the symbol table for this method. */
+
+  ast* last_variable = methodcall->left;
+  int id = -6;
+  while (!ast_is_null (last_variable->right))
+    {
+      if (last_variable->left->node_type == IDNODE)
+        {
+          id = last_variable->left->data;
+        }
+      if (last_variable->left->operation_type == FIELDOP)
+        {
+          id = last_variable->left->data;
+        }
+    }
+
+  methodcall_symtbl_index = symtbl_lookup (id);
+
+  while (!ast_is_null (methodcall))
+    {
+      ++num_args;
+
+      /* Each of the arguments needs to be a legal expression. */
+      dim = _symtbl_process_expression (methodcall->left);
+
+      /*
+       * Arrays cannot be passed as arguments, so if dim > 1, we already know
+       * this is not a legal method call statement.
+       */
+      if (dim > 1)
+        {
+          error_line_column (methodcall->line, methodcall->column,
+                             "arrays cannot be passed as arguments");
+        }
+
+      /* Check the next one. */
+      methodcall = methodcall->right;
+    }
+
+  /* Make sure we have the required number of arguments. */
+  int real_num_args = symtbl_get_attribute (methodcall_symtbl_index, ARGNUM_ATTR);
+  if (num_args != real_num_args)
+    {
+      char message[64];
+      sprintf (message, "expected %d arguments, got %d", real_num_args, num_args);
+      error_line_column (methodcall->line, methodcall->column, message);
+    }
+}
+
 void
 _symtbl_process_method_statements (ast* statements)
 {
+  while (!ast_is_null (statements))
+    {
+      ast* statement = statements->right;
+      int lhs_dim = -1;
+      int rhs_dim = -2;
+
+      /* Empty statements are premetted. */
+      if (ast_is_null (statement))
+        {
+          statements = statements->left;
+          continue;
+        }
+
+      /* Check based on operation type. */
+      switch (statement->operation_type)
+        {
+        case ASSIGNOP:
+          /* Check the variable. */
+          if (ast_is_null (statement->left)
+            {
+              error_line_column (statement->line, statement->column,
+                                 "missng rvalue in assignment statement");
+              break;
+            }
+          rhs_dim = _symtbl_process_variable (statement->left->right);
+
+          /* Check the expression. */
+          if (ast_is_numm (statement->right)
+            {
+              error_line_column (statement->line, statement->column,
+                                 "missng expression in assignment statement");
+              break;
+            }
+          lhs_dim = _symtbl_process_expression (statement->right);
+
+          /* Finally, make sure that the dimensions match. */
+          if (rhs_dim != lhs_dim)
+            {
+              error_line_column (statement->line, statement->column,
+                                 "dimension mismatch");
+            }
+
+            break;
+
+        case ROUTINECALLOP:
+          /* Count the number of arguments. */
+          _symtbl_process_routinecall (statement->right);
+          break;
+
+        case RETURNOP:
+            if (!ast_is_null (statement->left))
+              {
+                _symtbl_process_expression (statement->left);
+              }
+
+          break;
+
+        case IFELSEOP:
+          break;
+
+        case LOOPOP:
+          break;
+
+        case LTOP:
+        case LEOP:
+        case EQOP:
+        case NEOP:
+        case GEOP:
+        case GTOP:
+          break;
+
+        default:
+          char message[64];
+          sprintf (message, "unrecognized operation %d",
+                   statement->operation_type);
+          error_line_column (statement->line,
+                             statement->column,
+                             message);
+          break;
+
+      /* Get the next statement. */
+      statements = statements->left;
+    }
 }
 
 /** @todo More descriptive error codes? */
@@ -264,14 +427,13 @@ symtbl_construct (const ast* const root)
 
               ast* parameter_list = method_declaration->left->right->left;
               ast* int_type = ast_make_leaf (INTEGERTNODE, INT);
-
+              int n_args = 0;
               while (!ast_is_null (parameter_list))
                 {
                   // Frist add the class entry.
                   int symtbl_index = symtbl_insert_entry (parameter_list->left->left->data,
                                                           parameter_list->left->left->line,
                                                           parameter_list->left->left->column);
-
                   symtbl_set_attribute (symtbl_index, PREDE_ATTR, 0);
                   symtbl_set_attribute (symtbl_index, TYPE_ATTR, int_type);
                   if (parameter_list->operation_type == VARGTYPEOP)
@@ -282,9 +444,11 @@ symtbl_construct (const ast* const root)
                     {
                       symtbl_set_attribute (symtbl_index, KIND_ATTR, REF_ARG);
                     }
+
+                  ++n_args;
                   parameter_list = parameter_list->right;
                 }
-
+              symtbl_set_attribute (symtbl_index, ARGNUM_ATTR, n_args);
               /* Finally, process the block declarations, if there are any. */
               _symtbl_process_declaration_block (method_declaration->right->left);
               _symtbl_process_method_statements (method_declaration->right->right);
