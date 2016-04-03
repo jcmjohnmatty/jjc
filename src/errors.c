@@ -72,14 +72,14 @@ semantic_error (int type,
       fprintf (stderr, "symbol %s: not declared as a constant, can't be used as subrange bound\n", s);
       break;
 
-    case ARGUMENTS_NUM1:
-      fprintf (stderr, "routine %s: argument number in definition is different with the previous forward declaration\n", s);
-      break;
+    /* case ARGUMENTS_NUM1: */
+    /*   fprintf (stderr, "routine %s: argument number in definition is different with the previous forward declaration\n", s); */
+    /*   break; */
 
-    case ARGUMENTS_NUM2:
-      s = string_table->buffer + id + 1;
-      fprintf (stderr, "routine %s: argument number is different with the previous declaration\n", s);
-      break;
+    /* case ARGUMENTS_NUM2: */
+    /*   s = string_table->buffer + id + 1; */
+    /*   fprintf (stderr, "routine %s: argument number is different with the previous declaration\n", s); */
+    /*   break; */
 
     case FORW_REDECLARE:
       s = string_table->buffer + id + 1;
