@@ -6,12 +6,21 @@
 #define JJC_ERR_FATAL   2
 
 /*
+ * Processing instruction for error reporting routine.
+ */
+
+/** Print error and return to the caller. */
+#define CONTINUE 0
+/** Print the fatal error and abort execution. */
+#define ABORT 1
+
+/*
  * error type for error reporting routine
  */
 
-#define SYMTBL_OVERFLOW 100
+#define STACK_OVERFLOW 100
 #define REDECLARATION 101
-#define STACK_OVERFLOW 102
+#define SYMTBL_OVERFLOW 102
 #define UNDECLARATION 103
 #define ATTR_OVERFLOW 104
 #define NOT_USED 105

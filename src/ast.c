@@ -4,16 +4,9 @@
 #include <ast.h>
 #include <strtbl.h>
 
-ast dummy = { DUMMYNODE, 0, 0, 0, 0 };
 ast* root;
 ast* field_declaration_type = NULL;
 ast* method_declaration_type = NULL;
-
-ast*
-ast_null (void)
-{
-  return &dummy;
-}
 
 ast*
 ast_make_leaf (int type, int d)
@@ -23,8 +16,25 @@ ast_make_leaf (int type, int d)
   p = (ast*) malloc (sizeof (ast));
   p->left = NULL;
   p->right = NULL;
+  p->line = -1;
+  p->column = -1;
   p->node_type = type;
   p->data = d;
+  return p;
+}
+
+ast*
+ast_null_node (void)
+{
+  ast* p;
+
+  p = (ast*) malloc (sizeof (ast));
+  p->node_type = DUMMYNODE;
+  p->operation_type = 0;
+  p->line = -1;
+  p->column = -1;
+  p->left = NULL;
+  p->right = NULL;
   return p;
 }
 
@@ -36,6 +46,8 @@ ast_new (int operation, ast* l, ast* r)
   p = (ast*) malloc (sizeof (ast));
   p->node_type = EXPRNODE;
   p->operation_type = operation;
+  p->line = -1;
+  p->column = -1;
   p->left = l;
   p->right = r;
   return p;
@@ -51,6 +63,7 @@ ast_delete (ast* tree)
 
   ast_delete (tree->left);
   ast_delete (tree->right);
+
   free (tree);
 }
 
@@ -86,7 +99,7 @@ ast_set_left_subtree (ast* tree, ast* left)
   ast* p;
   ast* q;
 
-  if (tree == NULL)
+  if (tree == NULL || tree->node_type == DUMMYNODE)
     {
       return left;
     }
@@ -95,7 +108,7 @@ ast_set_left_subtree (ast* tree, ast* left)
   q = ast_get_left (p);
 
   /* Replace the leftmost DUMMYNODE. */
-  while (q != NULL)
+  while (q != NULL && q->node_type != DUMMYNODE)
     {
       p = q;
       q = ast_get_left (p);
@@ -111,7 +124,7 @@ ast_set_right_subtree (ast* tree, ast* right)
   ast* p;
   ast* q;
 
-  if (tree == NULL)
+  if (tree == NULL || tree->node_type == DUMMYNODE)
     {
       return right;
     }
@@ -120,7 +133,7 @@ ast_set_right_subtree (ast* tree, ast* right)
   q = ast_get_right (p);
 
   /* Replace the rightmost DUMMYNODE. */
-  while (q != NULL)
+  while (q != NULL && 1->node_type != DUMMYNODE)
     {
       p = q;
       q = ast_get_right (p);
@@ -150,6 +163,12 @@ ast_get_data (ast* tree)
       return -1;
     }
   return tree->data;
+}
+
+int
+ast_is_null (ast* tree)
+{
+  return (tree == NULL) || (tree->node_type == DUMMYNODE);
 }
 
 void
@@ -194,7 +213,7 @@ ast_set_left_subtree_operation (ast* tree, int operation)
       ast_set_operation (p, operation);
       p = ast_get_left (p);
     }
-  while (p != NULL);
+  while (p != NULL && p->node_type != DUMMYNODE);
 }
 
 void
@@ -208,7 +227,7 @@ ast_set_right_subtree_operation (ast* tree, int operation)
       ast_set_operation (p, operation);
       p = ast_get_right (p);
     }
-  while (p != NULL);
+  while (p != NULL && p->node_type != DUMMYNODE);
 }
 
 char* opnodenames[] =
@@ -265,7 +284,7 @@ ast_print2 (ast* tree, int depth)
       zerocrosses ();
       printf ("************* SYNTAX TREE PRINTOUT ***********\n\n");
     }
-  if (tree == NULL)
+  if (tree == NULL || tree->node_type == DUMMYNODE)
     {
       indent (depth);
       printf ("[DUMMYNODE]\n");

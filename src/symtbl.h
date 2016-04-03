@@ -1,17 +1,9 @@
 #ifndef __SYMTBL_H_
 #define __SYMTBL_H_
 
+#define STACK_SIZE 100
 #define SYMTBL_SIZE 500
 #define ATTR_SIZE 2000
-
-/*
- * Processing instruction for error reporting routine.
- */
-
-/** Print error and return to the caller. */
-#define CONTINUE 0
-/** Print the fatal error and abort execution. */
-#define ABORT 1
 
 /*
  * These definitions correspond to the fields of a stack element.
@@ -56,7 +48,7 @@
 #define TYPEDEF 8
 #define PROCFORWARD 9
 #define PROCE 10
-#define CLASS 11
+#define CLASS_KIND 11
 #define ARR 12
 
 /**
@@ -65,15 +57,15 @@
 struct symtbl_stack
 {
   /** Mark the beginning of a block. */
-  bool is_marker;
+  int is_marker;
   /** Point to the lexeme of the id. */
   int name;
   /** Point to the <code>id</code>'s symbol table entry. */
   int symtbl_index;
   /** Dummy element to indicate an undeclared <code>id</code>. */
-  bool is_dummy;
+  int is_dummy;
   /** Is this <code>id</code> used? */
-  bool used;
+  int used;
 };
 
 typedef struct symtbl_stack symtbl_stack;

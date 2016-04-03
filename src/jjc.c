@@ -9,6 +9,7 @@
 #include <errors.h>
 #include <jjc.h>
 #include <strtbl.h>
+#include <symtbl.h>
 
 static const char* version_no = "1.0.0";
 
@@ -89,15 +90,16 @@ main (int argc, char* argv[]) {
 
       /* Allocate string table. */
       string_table = strtbl_new ();
+
       /* Specify the input file. */
-	  sourcefile = argv[optind];
+      sourcefile = argv[optind];
       FILE *infile = fopen (argv[optind], "r");
 
       if (!infile)
         {
-		  fprintf (stderr, "jjc: fatal error: unable to open file `%s'\n", sourcefile);
-		  print_usage ();
-		  exit (1);
+          fprintf (stderr, "jjc: fatal error: unable to open file `%s'\n", sourcefile);
+          print_usage ();
+          exit (1);
         }
 
       printf ("The output of our parser for file `%s':\n\n", argv[optind]);
@@ -107,6 +109,8 @@ main (int argc, char* argv[]) {
       yyin = infile;
 
       yyparse ();
+
+      symtbl_construct (root);
     }
   else
 	{

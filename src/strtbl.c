@@ -129,6 +129,7 @@ strtbl_contains_value (strtbl* stbl, char* string)
       if (strncmp ((char*) (stbl->buffer + start), string, length) == 0
           && stbl->buffer[start + length] == '\0')
         {
+            printf ("strtbl_contains_value: %d\n", 1);
           return 1;
         }
       while (stbl->buffer[start] != '\0')

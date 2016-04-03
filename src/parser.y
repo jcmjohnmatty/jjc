@@ -75,6 +75,7 @@
 %type <tree> DECLARATION_LIST
 %type <tree> ARRAY_CREATION_EXPRESSION
 %type <tree> EXPRESSION_INDEXING_LIST
+%type <tree> METHOD_DECLARATION_LIST2
 %type <tree> METHOD_DECLARATION_LIST
 %type <tree> METHOD_DECLARATION
 %type <tree> FORMAL_PARAMETER_LIST
@@ -109,13 +110,11 @@
 PROGRAM_DECLARATION
 : PROGRAM ID SEMI CLASS_DECLARATION_LIST
 {
-  // We only have to do this once...
-  symtbl_init ();
-
-  $$ = ast_new (PROGRAMOP,
-                $4,
-                ast_make_leaf (IDNODE, $2));
-  ast_print ($$);
+  root = ast_new (PROGRAMOP,
+                  $4,
+                  ast_make_leaf (IDNODE, $2));
+  root->line = yyline;
+  root->column = yycolumn;
 }
 ;
 
@@ -123,10 +122,15 @@ CLASS_DECLARATION_LIST
 : CLASS_DECLARATION
 {
   $$ = ast_new (CLASSOP, NULL, $1);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | CLASS_DECLARATION_LIST CLASS_DECLARATION
 {
   ast* t = ast_new (CLASSOP, NULL, $2);
+  $$->line = yyline;
+  $$->column = yycolumn;
+
   $$ = ast_set_left_subtree ($1, t);
 }
 ;
@@ -134,16 +138,9 @@ CLASS_DECLARATION_LIST
 CLASS_DECLARATION
 : CLASS ID CLASS_BODY
 {
-  // Frist add the class entry.
-  symtbl_insert_entry ($2->left->data);
-
-  symtbl_set_attribute (symtbl_index, PREDE_ATTR, false);
-  symtbl_set_attribute (symtbl_index, TYPE_ATTR, field_declaration_type);
-  symtbl_set_attribute (symtbl_index, KIND_ATTR, CLASS);
-
   $$ = ast_new (CLASSDEFOP, $3, ast_make_leaf (IDNODE, $2));
-
-  symtbl_close_block ();
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 ;
 
@@ -151,39 +148,41 @@ CLASS_BODY
 : LBRACE DECLARATION_LIST METHOD_DECLARATION_LIST2 RBRACE
 {
   $$ = ast_new (BODYOP, $2, $3);
-
-  symtbl_close_block ();
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | LBRACE DECLARATION_LIST RBRACE
 {
   $$ = ast_new (BODYOP, $2, NULL);
-
-  symtbl_close_block ();
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | LBRACE METHOD_DECLARATION_LIST2 RBRACE
 {
   $$ = ast_new (BODYOP, NULL, $2);
-
-  symtbl_close_block ();
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | LBRACE RBRACE
 {
-  $$ = NULL;
-
-  symtbl_close_block ();
+  $$ = ast_null_node ();
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 ;
 
 DECLARATION_LIST
 : DECLARATION ENDDECLARATION
 {
-  $$ = NULL;
+  $$ = ast_null_node ();
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | DECLARATION FIELD_DECLARATION_LIST ENDDECLARATION
 {
   $$ = ast_new (BODYOP, NULL, $2);
-
-  symtbl_close_block ();
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 ;
 
@@ -191,12 +190,14 @@ FIELD_DECLARATION_LIST
 : VARIABLE_DECLARATION_OR_INITIALIZATION_STATEMENT
 {
   $$ = ast_new (DECLOP, NULL, $1);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | FIELD_DECLARATION_LIST VARIABLE_DECLARATION_OR_INITIALIZATION_STATEMENT
 {
   $$ = ast_new (DECLOP, NULL, NULL);
   $$ = ast_set_right_subtree ($$, $2);
-  if ($1 != NULL)
+  if (!ast_is_null ($1))
     {
       $$ = ast_set_left_subtree ($1, $$);
     }
@@ -218,6 +219,8 @@ VARIABLE_DECLARATION_OR_INITIALIZATION_LIST
 : VARIABLE_DECLARATION_OR_INITIALIZATION
 {
   $$ = ast_new (DECLOP, NULL, $1);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | VARIABLE_DECLARATION_OR_INITIALIZATION_LIST COMMA VARIABLE_DECLARATION_OR_INITIALIZATION
 {
@@ -230,6 +233,8 @@ VARIABLE_DECLARATION_OR_INITIALIZATION
 : VARIABLE_DECLARATION_ID
 {
   $$ = ast_new (COMMAOP, $1, ast_new (COMMAOP, field_declaration_type, NULL));
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | VARIABLE_INITIALIZATION
 {
@@ -240,34 +245,27 @@ VARIABLE_DECLARATION_OR_INITIALIZATION
 VARIABLE_DECLARATION_ID
 : ID
 {
-  symtbl_open_block ();
-
-  // Frist add the class entry.
-  symtbl_insert_entry ($1);
-
-  symtbl_set_attribute (symtbl_index, PREDE_ATTR, false);
-  symtbl_set_attribute (symtbl_index, TYPE_ATTR, field_declaration_type);
-  symtbl_set_attribute (symtbl_index, KIND_ATTR, VAR);
-
   $$ = ast_make_leaf (IDNODE, $1);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | VARIABLE_DECLARATION_ID LBRAC RBRAC
 {
-  // Frist add the class entry.
-  symtbl_insert_entry ($1);
-
-  symtbl_set_attribute (symtbl_index, PREDE_ATTR, false);
-  symtbl_set_attribute (symtbl_index, TYPE_ATTR, field_declaration_type);
-  symtbl_set_attribute (symtbl_index, KIND_ATTR, ARR);
-
   $$ = ast_new (INDEXOP, NULL, $1);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 ;
 
 VARIABLE_INITIALIZATION
 : VARIABLE_DECLARATION_ID EQUAL VARIABLE_INITALIZER
 {
-  $$ = ast_new (COMMAOP, $1, ast_new (COMMAOP, field_declaration_type, $3));
+  ast* t = ast_new (COMMAOP, field_declaration_type, $3);
+  t->line = yyline;
+  t->column = yycolumn;
+  $$ = ast_new (COMMAOP, $1, t);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 ;
 
@@ -290,6 +288,8 @@ ARRAY_INITALIZER
 : LBRACE VARIABLE_INITALIZER_LIST RBRACE
 {
   $$ = ast_new (ARRAYTYPEOP, $2, field_declaration_type);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 ;
 
@@ -297,12 +297,14 @@ VARIABLE_INITALIZER_LIST
 : VARIABLE_INITALIZER
 {
   $$ = ast_new (COMMAOP, NULL, $1);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | VARIABLE_INITALIZER COMMA VARIABLE_INITALIZER_LIST
 {
   $$ = ast_new (COMMAOP, NULL, NULL);
   $$ = ast_set_right_subtree ($$, $1);
-  if ($1 != NULL)
+  if (!ast_is_null ($1))
     {
       $$ = ast_set_left_subtree ($3, $$);
     }
@@ -313,6 +315,8 @@ ARRAY_CREATION_EXPRESSION
 : INT EXPRESSION_INDEXING_LIST
 {
   $$ = ast_new (ARRAYTYPEOP, $2, ast_make_leaf (INTEGERTNODE, $1));
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 ;
 
@@ -320,12 +324,14 @@ EXPRESSION_INDEXING_LIST
 : LBRAC EXPRESSION RBRAC
 {
   $$ = ast_new (COMMAOP, NULL, $2);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | EXPRESSION_INDEXING_LIST LBRAC EXPRESSION RBRAC
 {
   $$ = ast_new (COMMAOP, NULL, NULL);
   $$ = ast_set_right_subtree ($$, $3);
-  if ($1 != NULL)
+  if (!ast_is_null ($1))
     {
       $$ = ast_set_left_subtree ($1, $$);
     }
@@ -335,8 +341,6 @@ METHOD_DECLARATION_LIST2
 : METHOD_DECLARATION_LIST
 {
   $$ = $1;
-
-  symtbl_close_block ();
 }
 ;
 
@@ -344,6 +348,8 @@ METHOD_DECLARATION_LIST
 : METHOD_DECLARATION
 {
   $$ = ast_new (BODYOP, NULL, $1);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | METHOD_DECLARATION_LIST METHOD_DECLARATION
 {
@@ -366,36 +372,29 @@ TYPE_OR_VOID
 METHOD_DECLARATION
 : METHOD TYPE_OR_VOID ID LPAREN FORMAL_PARAMETER_LIST RPAREN BLOCK
 {
-  symtbl_close_block ();
-
-  // Frist add the class entry.
-  symtbl_insert_entry ($3);
-
-  symtbl_set_attribute (symtbl_index, PREDE_ATTR, false);
-  symtbl_set_attribute (symtbl_index, TYPE_ATTR, method_declaration_type);
-  symtbl_set_attribute (symtbl_index, KIND_ATTR, FUNC);
-
   ast* head_op = ast_new (HEADOP, ast_make_leaf (IDNODE, $3), $5);
   $$ = ast_new (METHODOP, head_op, $7);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | METHOD TYPE_OR_VOID ID LPAREN RPAREN BLOCK
 {
   ast* head_op = ast_new (HEADOP, ast_make_leaf (IDNODE, $3), NULL);
   $$ = ast_new (METHODOP, head_op, $6);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 ;
 
 FORMAL_PARAMETER_LIST
 : PARTIAL_PARAMETER_LIST
 {
-  symtbl_close_block ();
-
   $$ = ast_new (SPECOP, $1, method_declaration_type);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | FORMAL_PARAMETER_LIST SEMI PARTIAL_PARAMETER_LIST
 {
-  symtbl_close_block ();
-
   $$ = ast_set_right_subtree ($1, $3);
 }
 ;
@@ -405,57 +404,47 @@ ID_LIST
 {
   /** @todo Is this duplication right/required? */
   ast* id_node = ast_make_leaf (IDNODE, $1);
-  $$ = ast_new (COMMAOP, id_node, ast_make_leaf (INTEGERTNODE, $1));
+  id_node->line = yyline;
+  id_node->column = yycolumn;
+  ast* t = ast_make_leaf (INTEGERTNODE, $1);
+  t->line = yyline;
+  t->column = yycolumn;
+  $$ = ast_new (COMMAOP, id_node, t);
   $$ = ast_new (RARGTYPEOP, $$, NULL);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | ID_LIST COMMA ID
 {
   /** @todo Is this duplication right/required? */
   ast* id_node = ast_make_leaf (IDNODE, $3);
-  ast* third_id_node = ast_new (COMMAOP, id_node, $1);
+  id_node->line = yyline;
+  id_node->column = yycolumn;
+  ast* t = ast_make_leaf (INTEGERTNODE, $3);
+  t->line = yyline;
+  t->column = yycolumn;
+  ast* third_id_node = ast_new (COMMAOP, id_node, t);
+  third_id_node->line = yyline;
+  third_id_node->column = yycolumn;
 
   third_id_node = ast_new (RARGTYPEOP, third_id_node, NULL);
-  $$ = ast_set_right_subtree ($1, third_id_node);
+  third_id_node->line = yyline;
+  third_id_node->column = yycolumn;
+
+  $$ = ast_set_left_subtree ($1, third_id_node);
 }
 ;
 
 PARTIAL_PARAMETER_LIST
 : VAL INT ID_LIST
 {
-  symtbl_open_block ();
-
-  ast* t = $3;
-  ast* int_type = ast_make_leaf (INTEGERTNODE, $2);
-  while (t->left != NULL)
-    {
-      // Frist add the class entry.
-      symtbl_insert_entry (t->data);
-
-      symtbl_set_attribute (symtbl_index, PREDE_ATTR, false);
-      symtbl_set_attribute (symtbl_index, TYPE_ATTR, int_type);
-      symtbl_set_attribute (symtbl_index, KIND_ATTR, VALUE_ARG);
-    }
-
   ast_set_operation ($3, VARGTYPEOP);
   ast_set_right_subtree_operation ($3, VARGTYPEOP);
+
   $$ = $3;
 }
 | INT ID_LIST
 {
-  symtbl_open_block ();
-
-  ast* t = $2;
-  ast* int_type = ast_make_leaf (INTEGERTNODE, $1);
-  while (t->left != NULL)
-    {
-      // Frist add the class entry.
-      symtbl_insert_entry (t->data);
-
-      symtbl_set_attribute (symtbl_index, PREDE_ATTR, false);
-      symtbl_set_attribute (symtbl_index, TYPE_ATTR, int_type);
-      symtbl_set_attribute (symtbl_index, KIND_ATTR, REF_ARG);
-    }
-
   $$ = $2;
 }
 ;
@@ -464,10 +453,14 @@ BLOCK
 : DECLARATION_LIST STATEMENT_LIST
 {
   $$ = ast_new (BODYOP, $1, $2);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | STATEMENT_LIST
 {
   $$ = ast_new (BODYOP, NULL, $1);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 ;
 
@@ -493,11 +486,17 @@ INT_ARR
 : INT LBRAC RBRAC
 {
   $$ = ast_make_leaf (INTEGERTNODE, $1);
+  $$->line = yyline;
+  $$->column = yycolumn;
   $$ = ast_new (INDEXOP, $$, NULL);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | INT_ARR LBRAC RBRAC
 {
   $$ = ast_new (INDEXOP, $1, NULL);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 ;
 
@@ -509,7 +508,11 @@ ID_DOTS
 | ID_DOTS DOT ID
 {
   ast* id_node = ast_new (TYPEIDOP, ast_make_leaf (INTEGERTNODE, $3), NULL);
+  id_node->line = yyline;
+  id_node->column = yycolumn;
   ast* dot_node = ast_new (FIELDOP, $1, NULL);
+  dot_node->line = yyline;
+  dot_node->column = yycolumn;
   $$ = ast_set_right_subtree (dot_node, id_node);
 }
 ;
@@ -517,12 +520,21 @@ ID_DOTS
 ID_OR_ID_ARRAY
 : ID
 {
-  $$ = ast_new (TYPEIDOP, ast_make_leaf (IDNODE, $1), NULL);
+  ast* t = ast_make_leaf (IDNODE, $1);
+  t->line = yyline;
+  t->column = yycolumn;
+  $$ = ast_new (TYPEIDOP, t, NULL);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | ID LBRAC RBRAC
 {
   ast* indexed_node = ast_new (INDEXOP, NULL, NULL);
+  indexed_node->line = yyline;
+  indexed_node->column = yycolumn;
   $$ = ast_new (TYPEIDOP, ast_make_leaf (IDNODE, $1), indexed_node);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 ;
 
@@ -533,29 +545,37 @@ STATEMENT_LIST
 }
 | LBRACE RBRACE
 {
-  $$ = NULL;
+  $$ = ast_null_node ();
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 ;
 
 STATEMENT_COMMA_LIST
 : STATEMENT
 {
-  if ($1 == NULL)
+  if (ast_is_null ($1))
     {
-      $$ = NULL;
+      $$ = ast_null_node ();
+      $$->line = yyline;
+      $$->column = yycolumn;
     }
   else
     {
       $$ = ast_new (STMTOP, NULL, $1);
+      $$->line = yyline;
+      $$->column = yycolumn;
     }
 }
 | STATEMENT STATEMENT_COMMA_LIST
 {
-  if ($1 == NULL)
+  if (ast_is_null ($1))
     {
-      if ($2 == NULL)
+      if (ast_is_null ($2))
         {
-          $$ = NULL;
+          $$ = ast_null_node ();
+          $$->line = yyline;
+          $$->column = yycolumn;
         }
       else
         {
@@ -564,13 +584,17 @@ STATEMENT_COMMA_LIST
     }
   else
     {
-      if ($2 == NULL)
+      if (ast_is_null ($2))
         {
           $$ = ast_new (STMTOP, NULL, $1);
+          $$->line = yyline;
+          $$->column = yycolumn;
         }
       else
         {
           ast* t = ast_new (STMTOP, NULL, $1);
+          t->line = yyline;
+          t->column = yycolumn;
           $$ = ast_set_left_subtree (t, $2);
         }
     }
@@ -600,7 +624,9 @@ STATEMENT
 }
 | SEMI
 {
-  $$ = NULL;
+  $$ = ast_null_node ();
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 ;
 
@@ -608,7 +634,11 @@ ASSIGNMENT_STATEMENT
 : VARIABLE ASSGN EXPRESSION
 {
   ast* var_node = ast_new (ASSIGNOP, NULL, $1);
+  var_node->line = yyline;
+  var_node->column = yycolumn;
   $$ = ast_new (ASSIGNOP, var_node, $3);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 ;
 
@@ -616,6 +646,8 @@ METHOD_CALL_STATEMENT
 : VARIABLE EXPRESSION_PAREN_LIST
 {
   $$ = ast_new (ROUTINECALLOP, $1, $2);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 ;
 
@@ -623,10 +655,14 @@ RETURN_STATEMENT
 : RETURN
 {
   $$ = ast_new (RETURNOP, NULL, NULL);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | RETURN EXPRESSION
 {
   $$ = ast_new (RETURNOP, $2, NULL);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 ;
 
@@ -634,15 +670,23 @@ IF_STATEMENT
 : IF EXPRESSION STATEMENT_LIST ELSE STATEMENT_LIST
 {
   ast* exp_statement_pair = ast_new (COMMAOP, $2, $3);
+  exp_statement_pair->line = yyline;
+  exp_statement_pair->column = yycolumn;
   ast* if_half = ast_new (IFELSEOP, NULL, exp_statement_pair);
+  if_half->line = yyline;
+  if_half->column = yycolumn;
   $$ = ast_new (IFELSEOP, if_half, $5);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | IF EXPRESSION STATEMENT_LIST
 {
-  ast_print ($2);
-  ast_print ($3);
   ast* exp_statement_pair = ast_new (COMMAOP, $2, $3);
+  exp_statement_pair->line = yyline;
+  exp_statement_pair->column = yycolumn;
   $$ = ast_new (IFELSEOP, NULL, exp_statement_pair);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 ;
 
@@ -650,13 +694,17 @@ WHILE_STATEMENT
 : WHILE EXPRESSION STATEMENT_LIST
 {
   $$ = ast_new (LOOPOP, $2, $3);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 ;
 
 EXPRESSION_PAREN_LIST
 : LPAREN RPAREN
 {
-  $$ = NULL;
+  $$ = ast_null_node ();
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | LPAREN EXPRESSION_LIST RPAREN
 {
@@ -667,10 +715,14 @@ EXPRESSION_LIST
 : EXPRESSION
 {
   $$ = ast_new (COMMAOP, $1, NULL);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | EXPRESSION_LIST COMMA EXPRESSION
 {
   ast* comma_node = ast_new (COMMAOP, $3, NULL);
+  comma_node->line = yyline;
+  comma_node->column = yycolumn;
   $$ = ast_set_right_subtree ($1, comma_node);
 }
 ;
@@ -679,26 +731,38 @@ COMPARISON_OPERATOR
 : LT
 {
   $$ = ast_new (LTOP, NULL, NULL);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | LE
 {
   $$ = ast_new (LEOP, NULL, NULL);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | EQ
 {
   $$ = ast_new (EQOP, NULL, NULL);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | NE
 {
   $$ = ast_new (NEOP, NULL, NULL);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | GE
 {
   $$ = ast_new (GEOP, NULL, NULL);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | GT
 {
   $$ = ast_new (GTOP, NULL, NULL);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 ;
 
@@ -727,6 +791,8 @@ SIMPLE_EXPRESSION
 {
   ast* neg_node = ast_new (UNARYNEGOP, $2, NULL);
   $$ = neg_node;
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | PLUS TERM BINARY_OPERATOR_TERM_LIST
 {
@@ -735,6 +801,8 @@ SIMPLE_EXPRESSION
 | MINUS TERM BINARY_OPERATOR_TERM_LIST
 {
   ast* neg_node = ast_new (UNARYNEGOP, $2, NULL);
+  neg_node->line = yyline;
+  neg_node->column = yycolumn;
   $$ = ast_set_left_subtree ($3, neg_node);
 }
 | TERM BINARY_OPERATOR_TERM_LIST
@@ -747,28 +815,40 @@ BINARY_OPERATOR_TERM_LIST
 : PLUS TERM
 {
   $$ = ast_new (ADDOP, NULL, $2);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | MINUS TERM
 {
   $$ = ast_new (SUBOP, NULL, $2);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | OR TERM
 {
   $$ = ast_new (OROP, NULL, $2);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | BINARY_OPERATOR_TERM_LIST PLUS TERM
 {
   ast* subterm = ast_new (ADDOP, NULL, $3);
+  subterm->line = yyline;
+  subterm->column = yycolumn;
   $$ = ast_set_left_subtree ($1, subterm);
 }
 | BINARY_OPERATOR_TERM_LIST MINUS TERM
 {
   ast* subterm = ast_new (SUBOP, NULL, $3);
+  subterm->line = yyline;
+  subterm->column = yycolumn;
   $$ = ast_set_left_subtree ($1, subterm);
 }
 | BINARY_OPERATOR_TERM_LIST OR TERM
 {
   ast* subterm = ast_new (OROP, NULL, $3);
+  subterm->line = yyline;
+  subterm->column = yycolumn;
   $$ = ast_set_left_subtree ($1, subterm);
 }
 ;
@@ -776,7 +856,7 @@ BINARY_OPERATOR_TERM_LIST
 TERM
 : FACTOR BINARY_OPERATOR_FACTOR_LIST
 {
-  if ($2 == NULL)
+  if (ast_is_null ($2))
     {
       $$ = $1;
     }
@@ -790,33 +870,47 @@ TERM
 BINARY_OPERATOR_FACTOR_LIST
 : /* empty */
 {
-  $$ = NULL;
+  $$ = ast_null_node ();
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | TIMES FACTOR
 {
   $$ = ast_new (MULTOP, $2, NULL);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | DIVIDE FACTOR
 {
   $$ = ast_new (DIVOP, $2, NULL);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | AND FACTOR
 {
   $$ = ast_new (ANDOP, $2, NULL);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | BINARY_OPERATOR_FACTOR_LIST TIMES FACTOR
 {
   ast* subterm = ast_new (MULTOP, $3, NULL);
+  subterm->line = yyline;
+  subterm->column = yycolumn;
   $$ = ast_set_right_subtree ($1, subterm);
 }
 | BINARY_OPERATOR_FACTOR_LIST DIVIDE FACTOR
 {
   ast* subterm = ast_new (DIVOP, $3, NULL);
+  subterm->line = yyline;
+  subterm->column = yycolumn;
   $$ = ast_set_right_subtree ($1, subterm);
 }
 | BINARY_OPERATOR_FACTOR_LIST AND FACTOR
 {
   ast* subterm = ast_new (ANDOP, $3, NULL);
+  subterm->line = yyline;
+  subterm->column = yycolumn;
   $$ = ast_set_right_subtree ($1, subterm);
 }
 ;
@@ -849,24 +943,37 @@ UNSIGNED_CONSTANT
 : ICONST
 {
   $$ = ast_make_leaf (NUMNODE, $1);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | SCONST
 {
   $$ = ast_make_leaf (STRINGNODE, $1);
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 ;
 
 VARIABLE
 : ID VARIABLE_LIST
 {
-  if ($2 != NULL)
+  if (!ast_is_null ($2))
     {
       ast* right = ast_new (SELECTOP, $2, NULL);
-      $$ = ast_new (VAROP, ast_make_leaf (IDNODE, $1), right);
+      right->line = yyline;
+      right->column = yycolumn;
+      ast* t = ast_make_leaf (IDNODE, $1);
+      t->line = yyline;
+      t->column = yycolumn;
+      $$ = ast_new (VAROP, t, right);
+      $$->line = yyline;
+      $$->column = yycolumn;
     }
   else
     {
       $$ = ast_make_leaf (IDNODE, $1);
+      $$->line = yyline;
+      $$->column = yycolumn;
     }
 }
 ;
@@ -874,13 +981,17 @@ VARIABLE
 VARIABLE_LIST
 : /* empty */
 {
-  $$ = NULL;
+  $$ = ast_null_node ();
+  $$->line = yyline;
+  $$->column = yycolumn;
 }
 | EXPRESSION_BRACKET_LIST VARIABLE_LIST
 {
-  if ($2 == NULL)
+  if (ast_is_null ($2))
     {
       $$ = $1;
+      $$->line = yyline;
+      $$->column = yycolumn;
     }
   else
     {
@@ -889,10 +1000,16 @@ VARIABLE_LIST
 }
 | VARIABLE_LIST DOT ID
 {
-  ast* field_node = ast_new (FIELDOP, ast_make_leaf (IDNODE, $3), NULL);
-  if ($1 == NULL)
+  ast* t = ast_make_leaf (IDNODE, $3);
+  t->line = yyline;
+  t->column = yycolumn;
+
+  ast* field_node = ast_new (FIELDOP, t, NULL);
+  if (ast_is_null ($1))
     {
       $$ = field_node;
+      $$->line = yyline;
+      $$->column = yycolumn;
     }
   else
     {

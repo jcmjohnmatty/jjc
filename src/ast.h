@@ -67,6 +67,10 @@ struct ast
   /** */
   int data;
   /** */
+  unsigned long line;
+  /** */
+  unsigned long column;
+  /** */
   struct ast* left;
   /** */
   struct ast* right;
@@ -99,6 +103,15 @@ typedef union
  */
 ast*
 ast_make_leaf (int type, int d);
+
+/**
+ * @brief Null AST.
+ *
+ * This exists to allow tracking line and column numbers, as opposed to just
+ * using <code>NULL</code>.
+ */
+ast*
+ast_null_node (void);
 
 /**
  * @brief Create an interior node with a given operation_type and left and
@@ -140,6 +153,16 @@ ast_get_left (ast* tree);
  */
 ast*
 ast_get_right (ast* tree);
+
+/**
+ * @brief Check whether an <code>ast</code> is NULL or a DUMMYNODE.
+ *
+ * @param[in] tree The <code>ast</code> to check.
+ *
+ * @return If <code>tree</code> is NULL or a DUMMYNODE.
+ */
+int
+ast_is_null (ast* tree);
 
 /**
  * @brief Set the leftmost subtree of an <code>ast</code>.
