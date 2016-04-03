@@ -45,10 +45,10 @@ _symtbl_process_declaration_block (ast* declarations)
 
       field_declaration = declarations->right;
 
-      if (ast_is_null (field_declarations))
+      if (ast_is_null (field_declaration))
         {
-          error_line_column (field_declarations->line,
-                             field_declarations->column,
+          error_line_column (field_declaration->line,
+                             field_declaration->column,
                              "empty field declaration");
           /* Let's find more errors!!! */
           declarations = declarations->left;
@@ -71,17 +71,17 @@ _symtbl_process_declaration_block (ast* declarations)
         }
       else if (field_declaration->left->node_type == INDEXOP)
         {
-          ast* variable_declaration_id = field_declaration;
+          ast* field_declaration_id = field_declaration;
           int dim = 0;
           do
             {
-              variable_declaration_id = variable_declaration_id->right;
+              field_declaration_id = field_declaration_id->right;
               ++dim;
             }
-          while (variable_declaration_id->operation_type != IDNODE)
+          while (field_declaration_id->operation_type != IDNODE);
 
-          int symtbl_index
-            = symtbl_insert_entry (field_declaration_id->data);
+          int symtbl_index =
+            symtbl_insert_entry (field_declaration_id->data);
           symtbl_set_attribute (symtbl_index, TREE_ATTR,
                                 field_declaration);
           symtbl_set_attribute (symtbl_index, PREDE_ATTR, 0);
@@ -168,14 +168,14 @@ symtbl_construct (const ast* const root)
            * Declarations are all the way down in the tree for some reason, and
            * as a result, we need to search for them.
            */
-
+          ast* declarations;
           do
             {
               declarations = class_body->left;
             }
           while (!ast_is_null (declarations) && declarations->operation_type != DECLOP);
 
-          _symtbl_process_declaration_block (declaration);
+          _symtbl_process_declaration_block (declarations);
 
           /* Now, process the methods. */
           ast* t = class_body;
