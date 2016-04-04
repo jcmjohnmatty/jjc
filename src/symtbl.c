@@ -198,7 +198,7 @@ _symtbl_process_variable (ast* variable)
 }
 
 int
-_symtbl_process_type(ast* type)
+_symtbl_process_type (ast* type)
 {
   int kind;
   int dim = 0;
@@ -298,7 +298,7 @@ _symtbl_process_methodcall (ast* methodcall)
   int methodcall_symtbl_index = -4;
 
   /* Check the variable we are calling the method from. */
-  var_dim = _symtbl_check_variable (methodcall->left);
+  var_dim = _symtbl_process_variable (methodcall->left);
 
   if (var_dim > 0)
     {
@@ -371,7 +371,7 @@ _symtbl_process_unsigned_constant (ast* unsigned_constant)
 }
 
 int
-_symtbl_process_routinecall (ast* routinecall);
+_symtbl_process_methodcall (ast* routinecall);
 
 int
 _symtbl_process_factor (ast* factor)
@@ -391,7 +391,7 @@ _symtbl_process_factor (ast* factor)
       break;
 
     case ROUTINECALLOP:
-      dim = _symtbl_process_routinecall (factor);
+      dim = _symtbl_process_methodcall (factor);
       break;
 
     case UNARYNEGOP:
@@ -547,7 +547,7 @@ _symtbl_process_method_statements (ast* statements)
           rhs_dim = _symtbl_process_variable (statement->left->right);
 
           /* Check the expression. */
-          if (ast_is_numm (statement->right))
+          if (ast_is_null (statement->right))
             {
               error_line_column (statement->line, statement->column,
                                  "missng expression in assignment statement");
@@ -566,7 +566,7 @@ _symtbl_process_method_statements (ast* statements)
 
         case ROUTINECALLOP:
           /* Count the number of arguments. */
-          _symtbl_process_routinecall (statement->right);
+          _symtbl_process_methodcall (statement->right);
           break;
 
         case RETURNOP:
