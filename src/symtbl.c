@@ -131,10 +131,69 @@ _symtbl_process_declaration_block (ast* declarations)
 }
 
 int
+_symtbl_process_expression (ast* expression);
+
+int
 _symtbl_process_variable (ast* variable)
 {
+  int dim = 0;
+  int symtbl_index;
+  int real_dim = -1;
+  ast* var_index_field;
+  int l;
+  int c;
+
+  if (!ast_is_null (variable->right))
+    {
+      while (!ast_is_null (variable))
+        {
+          switch (variable->operation_type)
+            {
+            case SELECTOP:
+              var_index_field = variable->left;
+              l = var_index_field->line;
+              c = var_index_field->column;
+              symtbl_index = symtbl_lookup (var_index_field->data);
+              if (var_index_field->operation_type == FIELDOP)
+                {
+                  /* if (symtbl_index == 0) */
+                  /*   { */
+                  /*     /\* Undeclared. *\/ */
+                  /*     semantic_error (UNDECLARATION, CONTINUE, */
+                  /*                     var_index_field->data, 0, */
+                  /*                     var_index_field->line, */
+                  /*                     var_index_field->column); */
+                  /*   } */
+                  break;
+                }
+
+            case INDEXOP:
+              /* Make sure we don't have too many dimensions. */
+              while (!ast_is_null (var_index_field))
+                {
+                  ++dim;
+                  _symtbl_process_expression (var_index_field->left);
+                  var_index_field = var_index_field->right;
+                }
+              if (dim != symtbl_get_attribute (symtbl_index, DIMEN_ATTR)
+                {
+                  error_line_column (l, c, "dimension mismatch");
+                }
+
+              break;
+
+            default:
+
+              break;
+            }
+
+          /* Get the thing to the right. */
+          variable = variable->right;
+        }
+    }
+
   /* Finally, return the dimensions of variable. */
-  return -1;
+  return dim;
 }
 
 int
@@ -213,13 +272,12 @@ _symtbl_process_methodcall (ast* methodcall)
 int
 _symtbl_process_unsigned_constant (ast* unsigned_constant)
 {
+  /* These are constant, so there is no need to do any further checking. */
+  return 0;
 }
 
 int
 _symtbl_process_routinecall (ast* routinecall);
-
-int
-_symtbl_process_expression (ast* expression);
 
 int
 _symtbl_process_factor (ast* factor)
@@ -245,6 +303,7 @@ _symtbl_process_factor (ast* factor)
       break;
 
     /* Any of these are an expression. */
+    /** @todo Lookup and insert other possible types. */
     case ASSIGNOP:
     case ROUTINECALLOP:
     case RETURNOP:
@@ -280,6 +339,13 @@ _symtbl_process_term (ast* term)
 
   /** @todo Check if term->right is NULL? */
   rhs_dim = _symtbl_process_factor (term->right);
+
+  /* Make sure we don't have a type mismatch. */
+
+  /* (term->right->node_type == STRINGNODE */
+  /*  && (!ast_is_null (term->left) || term->left->node_type != INTEGERTNODE)) */
+  /*   || term->right->node_type  */
+  /* if (term->right->node_type != term->left->node_type) */
 
   if (ast_is_null (term->left))
     {
