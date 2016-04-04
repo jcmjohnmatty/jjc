@@ -952,12 +952,14 @@ UNSIGNED_CONSTANT
 : ICONST
 {
   $$ = ast_make_leaf (NUMNODE, $1);
+  $$->operation_type = CONSTANTIDOP;
   $$->line = yyline;
   $$->column = yycolumn;
 }
 | SCONST
 {
   $$ = ast_make_leaf (STRINGNODE, $1);
+  $$->operation_type = CONSTANTIDOP;
   $$->line = yyline;
   $$->column = yycolumn;
 }

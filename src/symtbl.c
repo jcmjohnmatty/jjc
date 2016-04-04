@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <ast.h>
 #include <errors.h>
@@ -153,7 +154,7 @@ _symtbl_process_variable (ast* variable)
               var_index_field = variable->left;
               l = var_index_field->line;
               c = var_index_field->column;
-              symtbl_index = symtbl_lookup (var_index_field->data);
+              symtbl_index = symtbl_lookup (var_index_field->data, l, c);
               if (var_index_field->operation_type == FIELDOP)
                 {
                   /* if (symtbl_index == 0) */
@@ -175,7 +176,7 @@ _symtbl_process_variable (ast* variable)
                   _symtbl_process_expression (var_index_field->left);
                   var_index_field = var_index_field->right;
                 }
-              if (dim != symtbl_get_attribute (symtbl_index, DIMEN_ATTR)
+              if (dim != symtbl_get_attribute (symtbl_index, DIMEN_ATTR))
                 {
                   error_line_column (l, c, "dimension mismatch");
                 }
@@ -202,16 +203,16 @@ _symtbl_process_type(ast* type)
   int kind;
   int dim = 0;
 
-  if (tree->left->node_type == INTEGERTNODE)
+  if (type->left->node_type == INTEGERTNODE)
     {
       /* Just an integer (or an integer array). */
-      if (!ast_is_null (tree->right))
+      if (!ast_is_null (type->right))
         {
           /* Get the number of dimensions. */
-          while (!ast_is_null (tree))
+          while (!ast_is_null (type))
             {
               ++dim;
-              tree = tree->right;
+              type = type->right;
             }
           return dim;
         }
@@ -221,65 +222,69 @@ _symtbl_process_type(ast* type)
         }
     }
 
-  if (tree->left->node_type == IDNODE)
+  if (type->left->node_type == IDNODE)
     {
       /* Check if this id has been declared. */
-      int symtbl_index = symtbl_lookup (tree->left->data);
+      int symtbl_index = symtbl_lookup (type->left->data,
+                                        type->left->line,
+                                        type->left->column);
 
       /* Check if this id is a variable. */
       kind = symtbl_get_attribute (symtbl_index, KIND_ATTR);
       if (kind != CLASS_KIND)
         {
-          s = string_table->buffer + id + 1;
+          char* s = string_table->buffer + type->left->data + 1;
           char* c = malloc (strlen (s) + 16);
           sprintf (c, "no such class %s\n", s);
-          error_line_column (tree->left->line, tree->left->column, c);
+          error_line_column (type->left->line, type->left->column, c);
           free (c);
         }
 
       /* Check to make sure this isn't an array if we aren't at the end. */
-      if (!ast_is_null (tree->right))
+      if (!ast_is_null (type->right))
         {
-          tree = tree->right;
+          type = type->right;
         }
-      while (!ast_is_null (tree->right))
+      while (!ast_is_null (type->right))
         {
-          if (tree->operation_type == INDEXOP)
+          if (type->operation_type == INDEXOP)
             {
-              if (ast_is_null (tree->right) && dim > 0 && !ast_is_null (tree->left))
+              if (ast_is_null (type->right) && dim > 0 && !ast_is_null (type->left))
                 {
-                  error_line_column (tree->right->line,
-                                     tree->right->column,
+                  error_line_column (type->right->line,
+                                     type->right->column,
                                      "member selection on array");
                   return -30;
                 }
               ++dim;
             }
-          if (tree->operation_type == FIELDOP)
+          if (type->operation_type == FIELDOP)
             {
               if (dim > 0)
                 {
-                  error_line_column (tree->right->line,
-                                     tree->right->column,
+                  error_line_column (type->right->line,
+                                     type->right->column,
                                      "member selection on array");
                   return -30;
                 }
-              tree = tree->left;
+              type = type->left;
               /* Check if this id has been declared. */
-              int symtbl_index = symtbl_lookup (tree->left->data);
+              int symtbl_index = symtbl_lookup (type->left->data,
+                                                type->left->line,
+                                                type->left->column);
 
               /* Check if this id is a variable. */
               kind = symtbl_get_attribute (symtbl_index, KIND_ATTR);
               if (kind != CLASS_KIND)
                 {
-                  s = string_table->buffer + id + 1;
+                  char* s = string_table->buffer + type->left->data + 1;
                   char* c = malloc (strlen (s) + 16);
                   sprintf (c, "no such class %s\n", s);
-                  error_line_column (tree->left->line, tree->left->column, c);
+                  error_line_column (type->left->line, type->left->column, c);
                   free (c);
                 }
             }
-          tree = tree->right;
+          type = type->right;
         }
     }
 }
@@ -305,19 +310,25 @@ _symtbl_process_methodcall (ast* methodcall)
 
   ast* last_variable = methodcall->left;
   int id = -6;
+  int l = last_variable->line;
+  int c = last_variable->column;
   while (!ast_is_null (last_variable->right))
     {
       if (last_variable->left->node_type == IDNODE)
         {
           id = last_variable->left->data;
+          l = last_variable->left->line;
+          c = last_variable->left->column;
         }
       if (last_variable->left->operation_type == FIELDOP)
         {
           id = last_variable->left->data;
+          l = last_variable->left->line;
+          c = last_variable->left->column;
         }
     }
 
-  methodcall_symtbl_index = symtbl_lookup (id);
+  methodcall_symtbl_index = symtbl_lookup (id, l, c);
 
   while (!ast_is_null (methodcall))
     {
@@ -367,10 +378,12 @@ _symtbl_process_factor (ast* factor)
 {
   int dim = -20;
   int operation_type = factor->operation_type;
+  char message[64];
+
   /* Check based on the factor type. */
   switch (operation_type)
     {
-    case UNSIGNED_CONSTANT:
+    case CONSTANTIDOP:
       return 0;
 
     case VAROP:
@@ -388,7 +401,6 @@ _symtbl_process_factor (ast* factor)
     /* Any of these are an expression. */
     /** @todo Lookup and insert other possible types. */
     case ASSIGNOP:
-    case ROUTINECALLOP:
     case RETURNOP:
     case IFELSEOP:
     case LOOPOP:
@@ -402,11 +414,10 @@ _symtbl_process_factor (ast* factor)
       break;
 
     default:
-      char message[64];
       sprintf (message, "unrecognized operation %d",
-               statement->operation_type);
-      error_line_column (statement->line,
-                         statement->column,
+               factor->operation_type);
+      error_line_column (factor->line,
+                         factor->column,
                          message);
       break;
     }
@@ -432,7 +443,7 @@ _symtbl_process_term (ast* term)
 
   if (ast_is_null (term->left))
     {
-      lhs_dim = _symtbl_process_factor (term);
+      lhs_dim = _symtbl_process_factor (term->left);
     }
   else
     {
@@ -466,7 +477,7 @@ _symtbl_process_simple_expression (ast* simple_expression)
 
   if (ast_is_null (simple_expression->left))
     {
-      lhs_dim = _symtbl_process_term (term);
+      lhs_dim = _symtbl_process_term (simple_expression->left);
     }
   else
     {
@@ -494,7 +505,7 @@ _symtbl_process_expression (ast* expression)
 
       if (left_dim != right_dim)
         {
-          error_line_column (expression->line, expression-colmn,
+          error_line_column (expression->line, expression->column,
                              "dimension mismatch");
           /* Return some invalid value. */
           return -8;
@@ -508,6 +519,7 @@ _symtbl_process_expression (ast* expression)
 void
 _symtbl_process_method_statements (ast* statements)
 {
+  char message[64];
   while (!ast_is_null (statements))
     {
       ast* statement = statements->right;
@@ -526,7 +538,7 @@ _symtbl_process_method_statements (ast* statements)
         {
         case ASSIGNOP:
           /* Check the variable. */
-          if (ast_is_null (statement->left)
+          if (ast_is_null (statement->left))
             {
               error_line_column (statement->line, statement->column,
                                  "missng rvalue in assignment statement");
@@ -535,7 +547,7 @@ _symtbl_process_method_statements (ast* statements)
           rhs_dim = _symtbl_process_variable (statement->left->right);
 
           /* Check the expression. */
-          if (ast_is_numm (statement->right)
+          if (ast_is_numm (statement->right))
             {
               error_line_column (statement->line, statement->column,
                                  "missng expression in assignment statement");
@@ -580,14 +592,13 @@ _symtbl_process_method_statements (ast* statements)
           break;
 
         default:
-          char message[64];
           sprintf (message, "unrecognized operation %d",
                    statement->operation_type);
           error_line_column (statement->line,
                              statement->column,
                              message);
           break;
-
+        }
       /* Get the next statement. */
       statements = statements->left;
     }

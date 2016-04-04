@@ -33,10 +33,10 @@
 #define FIELD_MIS 115
 #define FORW_REDECLARE 116
 #define REC_TYPE_MIS 117
+#define ARR_TYPE_MIS 118
 #define VARIABLE_MIS 119
 #define FUNC_MISMATCH 120
 #define TYPE_MIS 121
-#define ARR_DIME_MIS 123
 #define MULTI_MAIN 124
 
 extern int jjc_errno;
