@@ -199,6 +199,89 @@ _symtbl_process_variable (ast* variable)
 int
 _symtbl_process_type(ast* type)
 {
+  int kind;
+  int dim = 0;
+
+  if (tree->left->node_type == INTEGERTNODE)
+    {
+      /* Just an integer (or an integer array). */
+      if (!ast_is_null (tree->right))
+        {
+          /* Get the number of dimensions. */
+          while (!ast_is_null (tree))
+            {
+              ++dim;
+              tree = tree->right;
+            }
+          return dim;
+        }
+      else
+        {
+          return 0;
+        }
+    }
+
+  if (tree->left->node_type == IDNODE)
+    {
+      /* Check if this id has been declared. */
+      int symtbl_index = symtbl_lookup (tree->left->data);
+
+      /* Check if this id is a variable. */
+      kind = symtbl_get_attribute (symtbl_index, KIND_ATTR);
+      if (kind != CLASS_KIND)
+        {
+          s = string_table->buffer + id + 1;
+          char* c = malloc (strlen (s) + 16);
+          sprintf (c, "no such class %s\n", s);
+          error_line_column (tree->left->line, tree->left->column, c);
+          free (c);
+        }
+
+      /* Check to make sure this isn't an array if we aren't at the end. */
+      if (!ast_is_null (tree->right))
+        {
+          tree = tree->right;
+        }
+      while (!ast_is_null (tree->right))
+        {
+          if (tree->operation_type == INDEXOP)
+            {
+              if (ast_is_null (tree->right) && dim > 0 && !ast_is_null (tree->left))
+                {
+                  error_line_column (tree->right->line,
+                                     tree->right->column,
+                                     "member selection on array");
+                  return -30;
+                }
+              ++dim;
+            }
+          if (tree->operation_type == FIELDOP)
+            {
+              if (dim > 0)
+                {
+                  error_line_column (tree->right->line,
+                                     tree->right->column,
+                                     "member selection on array");
+                  return -30;
+                }
+              tree = tree->left;
+              /* Check if this id has been declared. */
+              int symtbl_index = symtbl_lookup (tree->left->data);
+
+              /* Check if this id is a variable. */
+              kind = symtbl_get_attribute (symtbl_index, KIND_ATTR);
+              if (kind != CLASS_KIND)
+                {
+                  s = string_table->buffer + id + 1;
+                  char* c = malloc (strlen (s) + 16);
+                  sprintf (c, "no such class %s\n", s);
+                  error_line_column (tree->left->line, tree->left->column, c);
+                  free (c);
+                }
+            }
+          tree = tree->right;
+        }
+    }
 }
 
 int
