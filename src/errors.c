@@ -51,7 +51,7 @@ semantic_error (int type,
 
     case REDECLARATION:
       s = string_table->buffer + id + 1;
-      fprintf (stderr, "symbol %s: redeclared\n", s);
+      fprintf (stderr, "redeclaration of symbol %s\n", s);
       break;
 
     case SYMTBL_OVERFLOW:
@@ -60,7 +60,7 @@ semantic_error (int type,
 
     case UNDECLARATION:
       s = string_table->buffer + id + 1;
-      fprintf (stderr, "symbol %s: undeclared\n", s);
+      fprintf (stderr, "undeclared symbol %s\n", s);
       break;
 
     case ATTR_OVERFLOW:
