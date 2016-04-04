@@ -67,20 +67,6 @@ semantic_error (int type,
       fprintf (stderr, "attribute array overflowed\n");
       break;
 
-    case BOUND:
-      s = string_table->buffer + id + 1;
-      fprintf (stderr, "symbol %s: not declared as a constant, can't be used as subrange bound\n", s);
-      break;
-
-    /* case ARGUMENTS_NUM1: */
-    /*   fprintf (stderr, "routine %s: argument number in definition is different with the previous forward declaration\n", s); */
-    /*   break; */
-
-    /* case ARGUMENTS_NUM2: */
-    /*   s = string_table->buffer + id + 1; */
-    /*   fprintf (stderr, "routine %s: argument number is different with the previous declaration\n", s); */
-    /*   break; */
-
     case FORW_REDECLARE:
       s = string_table->buffer + id + 1;
       fprintf (stderr, "routine %s: forward redeclaration\n", s);
@@ -136,11 +122,6 @@ semantic_error (int type,
         }
       break;
 
-    case ARR_DIME_MIS:
-      s = string_table->buffer + id + 1;
-      fprintf (stderr, "symbol %s: inappropriate usage of arry element\n", s);
-      break;
-
     case REC_TYPE_MIS:
       s = string_table->buffer + id + 1;
       fprintf (stderr, "symbol %s: illegal usage of a field name\n", s);
@@ -159,11 +140,6 @@ semantic_error (int type,
     case VARIABLE_MIS:
       s = string_table->buffer + id + 1;
       fprintf (stderr, "symbol %s: can't be used as a variable\n", s);
-      break;
-
-    case NOT_TYPE:
-      s = string_table->buffer + id + 1;
-      fprintf (stderr, "symbol %s: is not declared as a type\n", s);
       break;
 
     case TYPE_MIS:
