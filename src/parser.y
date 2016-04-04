@@ -509,15 +509,22 @@ ID_DOTS
 {
   $$ = $1;
 }
-| ID_DOTS DOT ID
+| ID_DOTS DOT ID_OR_ID_ARRAY
 {
-  ast* id_node = ast_new (TYPEIDOP, ast_make_leaf (INTEGERTNODE, $3), NULL);
-  id_node->line = yyline;
-  id_node->column = yycolumn;
-  ast* dot_node = ast_new (FIELDOP, $1, NULL);
+  ast* tnode = $1;
+  while (!ast_is_null (tnode->right))
+    {
+      tnode = tnode->right;
+      if (ast_is_null (tnode->right) && !ast_is_null (tnode->left))
+        {
+          tnode = tnode->left;
+        }
+    }
+  ast* dot_node = ast_new (FIELDOP, $3, NULL);
   dot_node->line = yyline;
   dot_node->column = yycolumn;
-  $$ = ast_set_right_subtree (dot_node, id_node);
+  tnode->right = dot_node;
+  $$ = $1;
 }
 ;
 
@@ -531,14 +538,12 @@ ID_OR_ID_ARRAY
   $$->line = yyline;
   $$->column = yycolumn;
 }
-| ID LBRAC RBRAC
+| ID_OR_ID_ARRAY LBRAC RBRAC
 {
   ast* indexed_node = ast_new (INDEXOP, NULL, NULL);
   indexed_node->line = yyline;
   indexed_node->column = yycolumn;
-  $$ = ast_new (TYPEIDOP, ast_make_leaf (IDNODE, $1), indexed_node);
-  $$->line = yyline;
-  $$->column = yycolumn;
+  $$ = ast_set_right_subtree ($1, indexed_node);
 }
 ;
 
