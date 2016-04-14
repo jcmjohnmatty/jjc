@@ -72,40 +72,35 @@ semantic_error (int type,
       fprintf (stderr, "routine %s: forward redeclaration\n", s);
       break;
 
-    case PROCE_MISMATCH:
-      s = string_table->buffer + id + 1;
-      fprintf (stderr, "symbol %s: can't act as a procedure call\n", s);
-      break;
-
     case FUNC_MISMATCH:
       s = string_table->buffer + id + 1;
-      fprintf (stderr, "symbol %s: can't act as a function call\n", s);
+      fprintf (stderr, "symbol %s: not a function\n", s);
       break;
 
     case VAR_VAL:
       s = string_table->buffer + id + 1;
-      fprintf (stderr, "routine %s: reference/value type of the ", s);
-      fprintf (stderr, "%s parameter different with previous forward declaration\n",
+      fprintf (stderr, "function %s: reference/value type of ", s);
+      fprintf (stderr, "argument %s differ from previous declaration\n",
                symtbl_ordinal_abbreviation (symtbl_number));
       break;
 
     case CONSTANT_VAR:
       s = string_table->buffer + id + 1;
-      fprintf (stderr, "routine %s: the ", s);
-      fprintf (stderr, "%s parameter is a reference argument, can't be a constant\n",
+      fprintf (stderr, "function %s: ", s);
+      fprintf (stderr, "argument %s is a reference argument\n",
                symtbl_ordinal_abbreviation (symtbl_number));
       break;
 
     case EXPR_VAR:
       s = string_table->buffer + id + 1;
-      fprintf (stderr, "routine %s: reference argument of the ", s);
-      fprintf (stderr, "%s parameter can't be a expression\n",
+      fprintf (stderr, "function %s: reference argument of ", s);
+      fprintf (stderr, "argument %s can't be used as an expression\n",
                symtbl_ordinal_abbreviation (symtbl_number));
       break;
 
     case CONSTANT_ASSIGN:
       s = string_table->buffer + id + 1;
-      fprintf (stderr, "symbol %s: declared to be a constant, can't be assigned a new value\n", s);
+      fprintf (stderr, "symbol %s: constant\n", s);
       break;
 
     case ARR_TYPE_MIS:
@@ -125,11 +120,6 @@ semantic_error (int type,
     case REC_TYPE_MIS:
       s = string_table->buffer + id + 1;
       fprintf (stderr, "symbol %s: illegal usage of a field name\n", s);
-      break;
-
-    case INDX_MIS:
-      s = string_table->buffer + id + 1;
-      fprintf (stderr, "symbol %s: has incorrect number of dimensions\n", s);
       break;
 
     case FIELD_MIS:
