@@ -11,6 +11,7 @@ Makefile.in
 *.o
 *.dSYM
 *.bak
+*.swp
 bin
 aclocal.m4
 autom4te.cache

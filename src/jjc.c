@@ -102,8 +102,6 @@ main (int argc, char* argv[]) {
           exit (1);
         }
 
-      printf ("The output of our parser for file `%s':\n\n", argv[optind]);
-
       ++optind;
 
       yyin = infile;
@@ -113,6 +111,7 @@ main (int argc, char* argv[]) {
       symtbl_construct (root);
 
       symtbl_print ();
+
       ast_print (root);
     }
   else

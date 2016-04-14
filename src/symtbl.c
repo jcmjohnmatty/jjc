@@ -79,6 +79,14 @@ _symtbl_process_declaration_block (ast* declarations)
 
           if (variable->operation_type == 0)
             {
+              int dim = 0;
+              ast* variable_dim_counter = variable_type;
+              while (!ast_is_null (variable_dim_counter->left))
+                {
+                  ++dim;
+                  variable_dim_counter = variable_dim_counter->left;
+                }
+
               symtbl_index =
                 symtbl_insert_entry (variable->data,
                                      variable->line,
@@ -89,29 +97,33 @@ _symtbl_process_declaration_block (ast* declarations)
                                     variable_type);
               symtbl_set_attribute (symtbl_index, PREDE_ATTR, 0);
               symtbl_set_attribute (symtbl_index, KIND_ATTR, VAR);
-            }
-          else if (variable->left->operation_type == COMMAOP)
-            {
-              ast* variable_declaration_id = variable;
-              int dim = 0;
-              do
+              if (dim > 0)
                 {
-                  variable_declaration_id = variable_declaration_id->right;
-                  ++dim;
+                  symtbl_set_attribute (symtbl_index, DIMEN_ATTR, dim);
                 }
-              while (variable_declaration_id->operation_type != 0);
-
-              int symtbl_index =
-                symtbl_insert_entry (variable->data,
-                                     variable->line,
-                                     variable->column);
-              symtbl_set_attribute (symtbl_index, TREE_ATTR,
-                                    variable_declaration_id);
-              symtbl_set_attribute (symtbl_index, PREDE_ATTR, 0);
-              symtbl_set_attribute (symtbl_index, TYPE_ATTR, variable_type);
-              symtbl_set_attribute (symtbl_index, KIND_ATTR, ARR);
-              symtbl_set_attribute (symtbl_index, DIMEN_ATTR, dim);
             }
+          /* else if (variable->left->operation_type == COMMAOP) */
+          /*   { */
+          /*     ast* variable_declaration_id = variable; */
+          /*     int dim = 0; */
+          /*     do */
+          /*       { */
+          /*         variable_declaration_id = variable_declaration_id->right; */
+          /*         ++dim; */
+          /*       } */
+          /*     while (variable_declaration_id->operation_type != 0); */
+
+          /*     int symtbl_index = */
+          /*       symtbl_insert_entry (variable->data, */
+          /*                            variable->line, */
+          /*                            variable->column); */
+          /*     symtbl_set_attribute (symtbl_index, TREE_ATTR, */
+          /*                           variable_declaration_id); */
+          /*     symtbl_set_attribute (symtbl_index, PREDE_ATTR, 0); */
+          /*     symtbl_set_attribute (symtbl_index, TYPE_ATTR, variable_type); */
+          /*     symtbl_set_attribute (symtbl_index, KIND_ATTR, ARR); */
+          /*     symtbl_set_attribute (symtbl_index, DIMEN_ATTR, dim); */
+          /*   } */
           else
             {
               char message[64];
@@ -143,48 +155,70 @@ _symtbl_process_variable (ast* variable)
   ast* var_index_field;
   int l;
   int c;
+  int attr_ptr;
+  int attribute_value;
 
-  if (!ast_is_null (variable->right))
+  if (!ast_is_null (variable))
     {
       while (!ast_is_null (variable))
         {
           switch (variable->operation_type)
             {
             case SELECTOP:
-              var_index_field = variable->left;
-              l = var_index_field->line;
-              c = var_index_field->column;
-              symtbl_index = symtbl_lookup (var_index_field->data, l, c);
-              if (var_index_field->operation_type == FIELDOP)
-                {
-                  /* if (symtbl_index == 0) */
-                  /*   { */
-                  /*     /\* Undeclared. *\/ */
-                  /*     semantic_error (UNDECLARATION, CONTINUE, */
-                  /*                     var_index_field->data, 0, */
-                  /*                     var_index_field->line, */
-                  /*                     var_index_field->column); */
-                  /*   } */
-                  break;
-                }
+              variable = variable->left->left;
+              /* if (!ast_is_null (var_index_field->right)) */
+              /*   { */
+              /* ast_print (variable); */
+              /*     if (var_index_field->right->operation_type == FIELDOP) */
+              /*       { */
+              /*         var_index_field = variable->left; */
+              /*         l = var_index_field->line; */
+              /*         c = var_index_field->column; */
+              /*         symtbl_index = symtbl_lookup (var_index_field->data, l, c); */
+              /*       } */
+              /*     else */
+              /*       { */
+              /*         variable = variable->left; */
+              /*         continue; */
+              /*       } */
+              /*   } */
+              /* else */
+              /*   { */
+              /*     variable = variable->left; */
+              /*     continue; */
+              /*   } */
+              continue;
 
             case INDEXOP:
               /* Make sure we don't have too many dimensions. */
+              var_index_field = variable;
               while (!ast_is_null (var_index_field))
                 {
                   ++dim;
                   _symtbl_process_expression (var_index_field->left);
                   var_index_field = var_index_field->right;
                 }
+
               if (dim != symtbl_get_attribute (symtbl_index, DIMEN_ATTR))
                 {
                   error_line_column (l, c, "dimension mismatch");
+                  return 0;
                 }
-
               break;
 
             default:
+              if (!ast_is_null (variable->left))
+                {
+                  var_index_field = variable->left;
+                }
+              else
+                {
+                  var_index_field = variable;
+                }
 
+              l = var_index_field->line;
+              c = var_index_field->column;
+              symtbl_index = symtbl_lookup (var_index_field->data, l, c);
               break;
             }
 
@@ -194,7 +228,7 @@ _symtbl_process_variable (ast* variable)
     }
 
   /* Finally, return the dimensions of variable. */
-  return dim;
+  return dim - 1;
 }
 
 int
@@ -203,90 +237,94 @@ _symtbl_process_type (ast* type)
   int kind;
   int dim = 0;
 
-  if (type->left->node_type == INTEGERTNODE)
+  if (!ast_is_null (type))
     {
-      /* Just an integer (or an integer array). */
-      if (!ast_is_null (type->right))
+      if (type->left->node_type == INTEGERTNODE)
         {
-          /* Get the number of dimensions. */
-          while (!ast_is_null (type))
+          /* Just an integer (or an integer array). */
+          if (!ast_is_null (type->right))
             {
-              ++dim;
+              /* Get the number of dimensions. */
+              while (!ast_is_null (type))
+                {
+                  ++dim;
+                  type = type->right;
+                }
+              return dim;
+            }
+          else
+            {
+              return 0;
+            }
+        }
+
+      if (type->left->node_type == IDNODE)
+        {
+          /* Check if this id has been declared. */
+          int symtbl_index = symtbl_lookup (type->left->data,
+                                            type->left->line,
+                                            type->left->column);
+
+          /* Check if this id is a variable. */
+          kind = symtbl_get_attribute (symtbl_index, KIND_ATTR);
+          if (kind != CLASS_KIND)
+            {
+              char* s = string_table->buffer + type->left->data + 1;
+              char* c = malloc (strlen (s) + 16);
+              sprintf (c, "no such class %s\n", s);
+              error_line_column (type->left->line, type->left->column, c);
+              free (c);
+            }
+
+          /* Check to make sure this isn't an array if we aren't at the end. */
+          if (!ast_is_null (type->right))
+            {
               type = type->right;
             }
-          return dim;
-        }
-      else
-        {
-          return 0;
+          while (!ast_is_null (type->right))
+            {
+              if (type->operation_type == INDEXOP)
+                {
+                  if (ast_is_null (type->right) && dim > 0 && !ast_is_null (type->left))
+                    {
+                      error_line_column (type->right->line,
+                                         type->right->column,
+                                         "member selection on array");
+                      return -30;
+                    }
+                  ++dim;
+                }
+              if (type->operation_type == FIELDOP)
+                {
+                  if (dim > 0)
+                    {
+                      error_line_column (type->right->line,
+                                         type->right->column,
+                                         "member selection on array");
+                      return -30;
+                    }
+                  type = type->left;
+                  /* Check if this id has been declared. */
+                  int symtbl_index = symtbl_lookup (type->left->data,
+                                                    type->left->line,
+                                                    type->left->column);
+
+                  /* Check if this id is a variable. */
+                  kind = symtbl_get_attribute (symtbl_index, KIND_ATTR);
+                  if (kind != CLASS_KIND)
+                    {
+                      char* s = string_table->buffer + type->left->data + 1;
+                      char* c = malloc (strlen (s) + 16);
+                      sprintf (c, "no such class %s\n", s);
+                      error_line_column (type->left->line, type->left->column, c);
+                      free (c);
+                    }
+                }
+              type = type->right;
+            }
         }
     }
-
-  if (type->left->node_type == IDNODE)
-    {
-      /* Check if this id has been declared. */
-      int symtbl_index = symtbl_lookup (type->left->data,
-                                        type->left->line,
-                                        type->left->column);
-
-      /* Check if this id is a variable. */
-      kind = symtbl_get_attribute (symtbl_index, KIND_ATTR);
-      if (kind != CLASS_KIND)
-        {
-          char* s = string_table->buffer + type->left->data + 1;
-          char* c = malloc (strlen (s) + 16);
-          sprintf (c, "no such class %s\n", s);
-          error_line_column (type->left->line, type->left->column, c);
-          free (c);
-        }
-
-      /* Check to make sure this isn't an array if we aren't at the end. */
-      if (!ast_is_null (type->right))
-        {
-          type = type->right;
-        }
-      while (!ast_is_null (type->right))
-        {
-          if (type->operation_type == INDEXOP)
-            {
-              if (ast_is_null (type->right) && dim > 0 && !ast_is_null (type->left))
-                {
-                  error_line_column (type->right->line,
-                                     type->right->column,
-                                     "member selection on array");
-                  return -30;
-                }
-              ++dim;
-            }
-          if (type->operation_type == FIELDOP)
-            {
-              if (dim > 0)
-                {
-                  error_line_column (type->right->line,
-                                     type->right->column,
-                                     "member selection on array");
-                  return -30;
-                }
-              type = type->left;
-              /* Check if this id has been declared. */
-              int symtbl_index = symtbl_lookup (type->left->data,
-                                                type->left->line,
-                                                type->left->column);
-
-              /* Check if this id is a variable. */
-              kind = symtbl_get_attribute (symtbl_index, KIND_ATTR);
-              if (kind != CLASS_KIND)
-                {
-                  char* s = string_table->buffer + type->left->data + 1;
-                  char* c = malloc (strlen (s) + 16);
-                  sprintf (c, "no such class %s\n", s);
-                  error_line_column (type->left->line, type->left->column, c);
-                  free (c);
-                }
-            }
-          type = type->right;
-        }
-    }
+  return dim;
 }
 
 int
@@ -312,8 +350,12 @@ _symtbl_process_methodcall (ast* methodcall)
   int id = -6;
   int l = last_variable->line;
   int c = last_variable->column;
-  while (!ast_is_null (last_variable->right))
+  while (!ast_is_null (last_variable) && !ast_is_null (last_variable->right))
     {
+      if (last_variable->right->operation_type == SELECTOP)
+        {
+          last_variable = last_variable->right->left;
+        }
       if (last_variable->left->node_type == IDNODE)
         {
           id = last_variable->left->data;
@@ -326,12 +368,19 @@ _symtbl_process_methodcall (ast* methodcall)
           l = last_variable->left->line;
           c = last_variable->left->column;
         }
+      last_variable = last_variable->right;
     }
 
   methodcall_symtbl_index = symtbl_lookup (id, l, c);
 
+  methodcall = methodcall->right;
+  int line = -1;
+  int column = -1;
+
   while (!ast_is_null (methodcall))
     {
+      line = methodcall->line;
+      column = methodcall->column;
       ++num_args;
 
       /* Each of the arguments needs to be a legal expression. */
@@ -353,11 +402,12 @@ _symtbl_process_methodcall (ast* methodcall)
 
   /* Make sure we have the required number of arguments. */
   int real_num_args = symtbl_get_attribute (methodcall_symtbl_index, ARGNUM_ATTR);
+
   if (num_args != real_num_args)
     {
       char message[64];
       sprintf (message, "expected %d arguments, got %d", real_num_args, num_args);
-      error_line_column (methodcall->line, methodcall->column, message);
+      error_line_column (line, column, message);
     }
 
   return symtbl_get_attribute (methodcall_symtbl_index, DIMEN_ATTR);
@@ -371,55 +421,58 @@ _symtbl_process_unsigned_constant (ast* unsigned_constant)
 }
 
 int
-_symtbl_process_methodcall (ast* routinecall);
-
-int
 _symtbl_process_factor (ast* factor)
 {
   int dim = -20;
   int operation_type = factor->operation_type;
   char message[64];
-
-  /* Check based on the factor type. */
-  switch (operation_type)
+  if (factor->node_type == IDNODE)
     {
-    case CONSTANTIDOP:
-      return 0;
-
-    case VAROP:
       dim = _symtbl_process_variable (factor);
-      break;
+    }
+  else
+    {
+      /* Check based on the factor type. */
+      switch (operation_type)
+        {
+        case CONSTANTIDOP:
+          return 0;
 
-    case ROUTINECALLOP:
-      dim = _symtbl_process_methodcall (factor);
-      break;
+        case VAROP:
+          dim = _symtbl_process_variable (factor);
+          break;
 
-    case UNARYNEGOP:
-      dim = _symtbl_process_factor (factor->left);
-      break;
+        case ROUTINECALLOP:
+          dim = _symtbl_process_methodcall (factor);
+          break;
 
-    /* Any of these are an expression. */
-    /** @todo Lookup and insert other possible types. */
-    case ASSIGNOP:
-    case RETURNOP:
-    case IFELSEOP:
-    case LOOPOP:
-    case LTOP:
-    case LEOP:
-    case EQOP:
-    case NEOP:
-    case GEOP:
-    case GTOP:
-      dim = _symtbl_process_expression (factor);
-      break;
+        case UNARYNEGOP:
+          dim = _symtbl_process_factor (factor->left);
+          break;
 
-    default:
-      sprintf (message, "unrecognized operation %d",
-               factor->operation_type);
-      error_line_column (factor->line,
-                         factor->column,
-                         message);
-      break;
+          /* Any of these are an expression. */
+          /** @todo Lookup and insert other possible types. */
+        case ASSIGNOP:
+        case RETURNOP:
+        case IFELSEOP:
+        case LOOPOP:
+        case LTOP:
+        case LEOP:
+        case EQOP:
+        case NEOP:
+        case GEOP:
+        case GTOP:
+          dim = _symtbl_process_expression (factor);
+          break;
+
+        default:
+          sprintf (message, "unrecognized operation %d",
+                   factor->operation_type);
+          error_line_column (factor->line,
+                             factor->column,
+                             message);
+          break;
+        }
     }
 
   return dim;
@@ -432,7 +485,15 @@ _symtbl_process_term (ast* term)
   int lhs_dim = -13;
 
   /** @todo Check if term->right is NULL? */
-  rhs_dim = _symtbl_process_factor (term->right);
+  if (ast_is_null (term->right))
+    {
+      rhs_dim = _symtbl_process_factor (term);
+      return rhs_dim;
+    }
+  else
+    {
+      rhs_dim = _symtbl_process_factor (term->right);
+    }
 
   /* Make sure we don't have a type mismatch. */
 
@@ -443,7 +504,8 @@ _symtbl_process_term (ast* term)
 
   if (ast_is_null (term->left))
     {
-      lhs_dim = _symtbl_process_factor (term->left);
+      lhs_dim = _symtbl_process_factor (term);
+      return lhs_dim;
     }
   else
     {
@@ -465,30 +527,38 @@ _symtbl_process_simple_expression (ast* simple_expression)
   int rhs_dim = -9;
   int lhs_dim = -10;
 
-  /** @todo Check if term->right is NULL? */
-  if (simple_expression->operation_type == UNARYNEGOP)
+  if (simple_expression->operation_type >= LTOP
+      && simple_expression->operation_type <= GEOP)
     {
-      rhs_dim = _symtbl_process_term (simple_expression->right->left);
+      /** @todo Check if term->right is NULL? */
+      if (simple_expression->operation_type == UNARYNEGOP)
+        {
+          rhs_dim = _symtbl_process_term (simple_expression->right->left);
+        }
+      else
+        {
+          rhs_dim = _symtbl_process_term (simple_expression->right);
+        }
+
+      if (ast_is_null (simple_expression->left->left))
+        {
+          lhs_dim = _symtbl_process_term (simple_expression->left);
+        }
+      else
+        {
+          lhs_dim = _symtbl_process_simple_expression (simple_expression->left);
+        }
+
+      if (rhs_dim != lhs_dim)
+        {
+          error_line_column (simple_expression->line, simple_expression->column, "dimension mismatch");
+          return -11;
+        }
     }
   else
-    {
-      rhs_dim = _symtbl_process_term (simple_expression->right);
-    }
-
-  if (ast_is_null (simple_expression->left))
-    {
-      lhs_dim = _symtbl_process_term (simple_expression->left);
-    }
-  else
-    {
-      lhs_dim = _symtbl_process_simple_expression (simple_expression->left);
-    }
-
-  if (rhs_dim != lhs_dim)
-    {
-      error_line_column (simple_expression->line, simple_expression->column, "dimension mismatch");
-      return -11;
-    }
+   {
+     return _symtbl_process_term (simple_expression);
+   }
 
   return lhs_dim;
 }
@@ -497,21 +567,30 @@ _symtbl_process_simple_expression (ast* simple_expression)
 int
 _symtbl_process_expression (ast* expression)
 {
-  int left_dim = _symtbl_process_simple_expression (expression->left);
+  int left_dim;
   int right_dim = -7;
-  if (!ast_is_null (expression->right))
+  /** @todo Can we have these in simple expressions? */
+  if (expression->operation_type >= LTOP
+      && expression->operation_type <= GEOP)
     {
-      right_dim = _symtbl_process_simple_expression (expression->right);
-
-      if (left_dim != right_dim)
+      left_dim = _symtbl_process_simple_expression (expression->left);
+      if (!ast_is_null (expression->right))
         {
-          error_line_column (expression->line, expression->column,
-                             "dimension mismatch");
-          /* Return some invalid value. */
-          return -8;
+          right_dim = _symtbl_process_simple_expression (expression->right);
+
+          if (left_dim != right_dim)
+            {
+              error_line_column (expression->line, expression->column,
+                                 "dimension mismatch");
+              /* Return some invalid value. */
+              return -8;
+            }
         }
     }
-
+  else
+    {
+      left_dim = _symtbl_process_simple_expression (expression);
+    }
   /* Finally, return the dimensions of expression. */
   return left_dim;
 }
@@ -566,7 +645,7 @@ _symtbl_process_method_statements (ast* statements)
 
         case ROUTINECALLOP:
           /* Count the number of arguments. */
-          _symtbl_process_methodcall (statement->right);
+          _symtbl_process_methodcall (statement);
           break;
 
         case RETURNOP:
@@ -666,27 +745,36 @@ symtbl_construct (const ast* const root)
         }
       else
         {
-          /*
-           * Declarations are all the way down in the tree for some reason, and
-           * as a result, we need to search for them.
-           */
-          ast* declarations = class_body;
-          // int has_field_declaration;
-          do
+          ast* t;
+          if (!ast_is_null (class_body->left->left))//(class_body->left->operation_type == DECLOP)
             {
-              /* if (!ast_is_null (declarations->right)) */
-              /*   { */
-              /*     has_field_declaration = declarations->right; */
-              /*   } */
+              /*
+               * Declarations are all the way down in the tree for some reason, and
+               * as a result, we need to search for them.
+               */
+              ast* declarations = class_body;
+              // int has_field_declaration;
+              do
+                {
+                  /* if (!ast_is_null (declarations->right)) */
+                  /*   { */
+                  /*     has_field_declaration = declarations->right; */
+                  /*   } */
+                  declarations = declarations->left;
+                }
+              while (declarations->left->right->operation_type != DECLOP);
               declarations = declarations->left;
-            }
-          while (declarations->left->right->operation_type != DECLOP);
-          declarations = declarations->left;
 
-          _symtbl_process_declaration_block (declarations);
+              _symtbl_process_declaration_block (declarations);
+
+              t = class_body->left;
+            }
+          else
+            {
+              t = class_body->left->right;
+            }
 
           /* Now, process the methods. */
-          ast* t = class_body->left;
           while (!ast_is_null (t) && t->operation_type == BODYOP)
             {
               ast* method_declaration = t->right;
@@ -708,6 +796,7 @@ symtbl_construct (const ast* const root)
               /* Put the name in our symbol table. */
               ast* method_declaration_type;
 
+              /* Don't add parameters if we don't have any. */
               if (!ast_is_null (method_declaration->left->right))
                 {
                   method_declaration_type =
@@ -719,6 +808,26 @@ symtbl_construct (const ast* const root)
                 }
 
               int return_dim = _symtbl_process_type (method_declaration_type);
+
+              /* Check if we have a re-declared main method. */
+
+              int main_id = method_declaration->left->left->data;
+              char* method_name = string_table->buffer + main_id + 1;
+
+              if (strncmp (method_name, "main", 4) == 0)
+                {
+                  int i;
+                  for (i = stack_top; i >= 0; --i)
+                    {
+                      if (!stack[i].is_marker && stack[i].name == main_id)
+                        {
+                          /* Redeclaration of main method. */
+                          semantic_error (MULTI_MAIN, CONTINUE, main_id, 0,
+                                          method_declaration->left->left->line,
+                                          method_declaration->left->left->column);
+                        }
+                    }
+                }
 
               int symtbl_index =
                 symtbl_insert_entry (method_declaration->left->left->data,
@@ -838,7 +947,7 @@ symtbl_lookup (int id, int line, int column)
 {
   int i;
 
-  for (i = stack_top; i > 0; --i)
+  for (i = stack_top; i >= 0; --i)
     {
       if (!stack[i].is_marker && stack[i].name == id)
         {
@@ -892,7 +1001,7 @@ symtbl_close_block (void)
 
   --nesting;
   /* trim the stack */
-  stack_top = i - 1;
+  //stack_top = i - 1;
 }
 
 int
@@ -924,7 +1033,7 @@ symtbl_get_attribute (int symtbl_index, int attribute_number)
   i = symtbl_is_attribute (symtbl_index, attribute_number);
   if (!i)
     {
-      printf ("DEBUG: attribute number %d does not exist\n", attribute_number);
+      //printf ("DEBUG: attribute number %d does not exist\n", attribute_number);
       return 0;
     }
 

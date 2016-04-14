@@ -148,7 +148,7 @@ semantic_error (int type,
       break;
 
     case MULTI_MAIN:
-      fprintf (stderr, "main() method already declared\n");
+      fprintf (stderr, "redeclaration of method main\n");
       break;
 
     default:

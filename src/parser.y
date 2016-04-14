@@ -985,6 +985,9 @@ VARIABLE
       $$ = ast_make_leaf (IDNODE, $1);
       $$->line = yyline;
       $$->column = yycolumn;
+      $$ = ast_new (VAROP, $$, NULL);
+      $$->line = yyline;
+      $$->column = yycolumn;
     }
 }
 ;
