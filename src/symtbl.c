@@ -165,7 +165,7 @@ _symtbl_process_variable (ast* variable)
           switch (variable->operation_type)
             {
             case SELECTOP:
-              variable = variable->left->left;
+              variable = variable->left;
               /* if (!ast_is_null (var_index_field->right)) */
               /*   { */
               /* ast_print (variable); */
@@ -192,6 +192,7 @@ _symtbl_process_variable (ast* variable)
             case INDEXOP:
               /* Make sure we don't have too many dimensions. */
               var_index_field = variable;
+
               while (!ast_is_null (var_index_field))
                 {
                   ++dim;
@@ -216,9 +217,12 @@ _symtbl_process_variable (ast* variable)
                   var_index_field = variable;
                 }
 
-              l = var_index_field->line;
-              c = var_index_field->column;
-              symtbl_index = symtbl_lookup (var_index_field->data, l, c);
+              if (var_index_field->node_type == IDNODE)
+                {
+                  l = var_index_field->line;
+                  c = var_index_field->column;
+                  symtbl_index = symtbl_lookup (var_index_field->data, l, c);
+                }
               break;
             }
 
@@ -228,7 +232,14 @@ _symtbl_process_variable (ast* variable)
     }
 
   /* Finally, return the dimensions of variable. */
-  return dim - 1;
+  if (dim > 0)
+    {
+      return dim - 1;
+    }
+  else
+    {
+      return dim;
+    }
 }
 
 int
