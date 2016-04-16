@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <ast.h>
 #include <errors.h>
@@ -34,6 +35,9 @@ int attr_top = 0;
 
 extern int yyline;
 extern int yycolumn;
+
+int
+symtbl_insert_entry2 (int id, int kind, int line, int column);
 
 void
 _symtbl_process_declaration_block (ast* declarations)
@@ -352,7 +356,7 @@ _symtbl_process_methodcall (ast* methodcall)
   if (var_dim > 0)
     {
       error_line_column (methodcall->line, methodcall->column,
-                         "unable to call method on array");
+                         "unable to call function on array");
     }
 
   /* Get the index in the symbol table for this method. */
@@ -383,6 +387,12 @@ _symtbl_process_methodcall (ast* methodcall)
     }
 
   methodcall_symtbl_index = symtbl_lookup (id, l, c);
+
+  /* If this isn't a function, report an error. */
+  if (symtbl_get_attribute (methodcall_symtbl_index, KIND_ATTR) != FUNC)
+    {
+      semantic_error (FUNC_MISMATCH, CONTINUE, id, 0, l, c);
+    }
 
   methodcall = methodcall->right;
   int line = -1;
@@ -728,9 +738,10 @@ symtbl_construct (const ast* const root)
   while (!ast_is_null (class_declaration))
     {
       /* First, add the entry. */
-      int symtbl_index = symtbl_insert_entry (class_declaration->right->right->data,
-                                              class_declaration->line,
-                                              class_declaration->column);
+      int symtbl_index = symtbl_insert_entry2 (class_declaration->right->right->data,
+                                               CLASS_KIND,
+                                               class_declaration->line,
+                                               class_declaration->column);
       symtbl_set_attribute (symtbl_index, TREE_ATTR, class_declaration);
       symtbl_set_attribute (symtbl_index, PREDE_ATTR, 0);
       symtbl_set_attribute (symtbl_index, KIND_ATTR, CLASS_KIND);
@@ -841,9 +852,10 @@ symtbl_construct (const ast* const root)
                 }
 
               int symtbl_index =
-                symtbl_insert_entry (method_declaration->left->left->data,
-                                     method_declaration->left->left->line,
-                                     method_declaration->left->left->column);
+                symtbl_insert_entry2 (method_declaration->left->left->data,
+                                      FUNC,
+                                      method_declaration->left->left->line,
+                                      method_declaration->left->left->column);
               symtbl_set_attribute (symtbl_index, TREE_ATTR,
                                     method_declaration);
               symtbl_set_attribute (symtbl_index, TYPE_ATTR,
@@ -851,6 +863,7 @@ symtbl_construct (const ast* const root)
               symtbl_set_attribute (symtbl_index, PREDE_ATTR, 0);
               symtbl_set_attribute (symtbl_index, KIND_ATTR, FUNC);
               symtbl_set_attribute (symtbl_index, DIMEN_ATTR, return_dim);
+
               /* Open a new block and put in the variables in the method. */
               symtbl_open_block ();
 
@@ -860,9 +873,23 @@ symtbl_construct (const ast* const root)
               while (!ast_is_null (parameter_list))
                 {
                   // Frist add the class entry.
-                  int symtbl_index = symtbl_insert_entry (parameter_list->left->left->data,
-                                                          parameter_list->left->left->line,
-                                                          parameter_list->left->left->column);
+                  int symtbl_index;
+
+                  if (parameter_list->operation_type == VARGTYPEOP)
+                    {
+                      symtbl_index = symtbl_insert_entry2 (parameter_list->left->left->data,
+                                                           VALUE_ARG,
+                                                           parameter_list->left->left->line,
+                                                           parameter_list->left->left->column);
+                    }
+                  else
+                    {
+                      symtbl_index = symtbl_insert_entry2 (parameter_list->left->left->data,
+                                                           REF_ARG,
+                                                           parameter_list->left->left->line,
+                                                           parameter_list->left->left->column);
+                    }
+
                   symtbl_set_attribute (symtbl_index, PREDE_ATTR, 0);
                   symtbl_set_attribute (symtbl_index, TYPE_ATTR, int_type);
                   if (parameter_list->operation_type == VARGTYPEOP)
@@ -937,6 +964,148 @@ symtbl_insert_entry (int id, int line, int column)
   if (symtbl_lookup_here (id))
     {
       semantic_error (REDECLARATION, CONTINUE, id, 0, line, column);
+      return 0;
+    }
+
+  if (symtbl_top >= SYMTBL_SIZE - 1)
+    {
+      semantic_error (SYMTBL_OVERFLOW, ABORT, 0 , 0, line, column);
+    }
+
+  ++symtbl_top;
+  symtbl_array[symtbl_top] = 0;
+  symtbl_set_attribute (symtbl_top, NAME_ATTR, id);
+  symtbl_set_attribute (symtbl_top, NEST_ATTR, nesting);
+  symtbl_push (0, id, symtbl_top, 0);
+  return symtbl_top;
+}
+
+int
+symtbl_insert_entry2 (int id, int kind, int line, int column)
+{
+  int index;
+  int this_kind;
+  /* id is already declared in the current block. */
+  if (index = symtbl_lookup_here (id))
+    {
+      this_kind = symtbl_get_attribute (index, KIND_ATTR);
+
+      if (this_kind == 0)
+        {
+          this_kind = kind;
+
+          if (this_kind == CLASS_KIND)
+            {
+              char* s = string_table->buffer + id + 1;
+              char* message = malloc (39 + 27 + strlen (s));
+              sprintf ("%s has already been declared, and cannot be re-declared as a class\n", s);
+              error_line_column (line, column, message);
+              free (message);
+            }
+          if (this_kind == FUNC)
+            {
+              char* s = string_table->buffer + id + 1;
+              char* message = malloc (42 + 27 + strlen (s));
+              sprintf ("%s has already been declared, and cannot be re-declared as a function\n", s);
+              error_line_column (line, column, message);
+              free (message);
+            }
+          else if (this_kind == VAR)
+            {
+              char* s = string_table->buffer + id + 1;
+              char* message = malloc (42 + 27 + strlen (s));
+              sprintf ("%s has already been declared, and cannot be re-declared as a variable\n", s);
+              error_line_column (line, column, message);
+              free (message);
+            }
+          else if (this_kind == ARR)
+            {
+              char* s = string_table->buffer + id + 1;
+              char* message = malloc (40 + 27 + strlen (s));
+              sprintf ("%s has already been declared, and cannot be re-declared as an array\n", s);
+              error_line_column (line, column, message);
+              free (message);
+            }
+          else if (this_kind == REF_ARG)
+            {
+              char* s = string_table->buffer + id + 1;
+              char* message = malloc (52 + 27 + strlen (s));
+              sprintf ("%s has already been declared, and cannot be re-declared as a reference argument\n", s);
+              error_line_column (line, column, message);
+              free (message);
+            }
+          else if (this_kind == VALUE_ARG)
+            {
+              char* s = string_table->buffer + id + 1;
+              char* message = malloc (49 + 27 + strlen (s));
+              sprintf ("%s has already been declared, and cannot be re-declared as a value argument\n", s);
+              error_line_column (line, column, message);
+              free (message);
+            }
+          else
+            {
+              /*
+               * This symbol has already been declared.
+               */
+              semantic_error (REDECLARATION, CONTINUE, id, 0, line, column);
+            }
+        }
+
+      if (this_kind == CLASS_KIND)
+        {
+          char* s = string_table->buffer + id + 1;
+          char* message = malloc (39 + strlen (s));
+          sprintf ("%s has already been declared as a class\n", s);
+          error_line_column (line, column, message);
+          free (message);
+        }
+      if (this_kind == FUNC)
+        {
+          char* s = string_table->buffer + id + 1;
+          char* message = malloc (42 + strlen (s));
+          sprintf ("%s has already been declared as a function\n", s);
+          error_line_column (line, column, message);
+          free (message);
+        }
+      else if (this_kind == VAR)
+        {
+          char* s = string_table->buffer + id + 1;
+          char* message = malloc (42 + strlen (s));
+          sprintf ("%s has already been declared as a variable\n", s);
+          error_line_column (line, column, message);
+          free (message);
+        }
+      else if (this_kind == ARR)
+        {
+          char* s = string_table->buffer + id + 1;
+          char* message = malloc (40 + strlen (s));
+          sprintf ("%s has already been declared as an array\n", s);
+          error_line_column (line, column, message);
+          free (message);
+        }
+      else if (this_kind == REF_ARG)
+        {
+          char* s = string_table->buffer + id + 1;
+          char* message = malloc (52 + strlen (s));
+          sprintf ("%s has already been declared as a reference argument\n", s);
+          error_line_column (line, column, message);
+          free (message);
+        }
+      else if (this_kind == VALUE_ARG)
+        {
+          char* s = string_table->buffer + id + 1;
+          char* message = malloc (49 + strlen (s));
+          sprintf ("%s has already been declared as a value argument\n", s);
+          error_line_column (line, column, message);
+          free (message);
+        }
+      else
+        {
+          /*
+           * This symbol has already been declared.
+           */
+          semantic_error (REDECLARATION, CONTINUE, id, 0, line, column);
+        }
       return 0;
     }
 

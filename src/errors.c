@@ -67,14 +67,9 @@ semantic_error (int type,
       fprintf (stderr, "attribute array overflowed\n");
       break;
 
-    case FORW_REDECLARE:
-      s = string_table->buffer + id + 1;
-      fprintf (stderr, "routine %s: forward redeclaration\n", s);
-      break;
-
     case FUNC_MISMATCH:
       s = string_table->buffer + id + 1;
-      fprintf (stderr, "symbol %s: not a function\n", s);
+      fprintf (stderr, "symbol %s is not a function\n", s);
       break;
 
     case VAR_VAL:
@@ -93,21 +88,21 @@ semantic_error (int type,
 
     case EXPR_VAR:
       s = string_table->buffer + id + 1;
-      fprintf (stderr, "function %s: reference argument of ", s);
-      fprintf (stderr, "argument %s can't be used as an expression\n",
+      fprintf (stderr, "function %s with reference argument ", s);
+      fprintf (stderr, "%s can't be used as an expression\n",
                symtbl_ordinal_abbreviation (symtbl_number));
       break;
 
     case CONSTANT_ASSIGN:
       s = string_table->buffer + id + 1;
-      fprintf (stderr, "symbol %s: constant\n", s);
+      fprintf (stderr, "symbol %s is constant\n", s);
       break;
 
     case ARR_TYPE_MIS:
       s = string_table->buffer + id + 1;
       if (symtbl_number == 0)
         {
-          fprintf (stderr, "symbol %s: isn't defined as an array\n", s);
+          fprintf (stderr, "symbol %s isn't defined as an array\n", s);
         }
       else
         {
