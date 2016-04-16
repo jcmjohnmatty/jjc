@@ -227,11 +227,16 @@ _symtbl_process_variable (ast* variable)
                   c = var_index_field->column;
                   symtbl_index = symtbl_lookup (var_index_field->data, l, c);
 
-                  if (symtbl_get_attribute (symtbl_index, KIND_ATTR) != VAR)
-                    {
-                      semantic_error (VARIABLE_MIS, CONTINUE,
-                                      var_index_field->data, 0, l, c);
-                    }
+                  /* if (symtbl_index > 0) */
+                  /*   { */
+                  /*     if (symtbl_get_attribute (symtbl_index, KIND_ATTR) != VAR */
+                  /*         && symtbl_get_attribute (symtbl_index, KIND_ATTR) != REF_ARG */
+                  /*         && symtbl_get_attribute (symtbl_index, KIND_ATTR) != VALUE_ARG) */
+                  /*       { */
+                  /*         semantic_error (VARIABLE_MIS, CONTINUE, */
+                  /*                         var_index_field->data, 0, l, c); */
+                  /*       } */
+                  /*   } */
                 }
               break;
             }
