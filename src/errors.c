@@ -86,50 +86,19 @@ semantic_error (int type,
                symtbl_ordinal_abbreviation (symtbl_number));
       break;
 
-    case EXPR_VAR:
-      s = string_table->buffer + id + 1;
-      fprintf (stderr, "function %s with reference argument ", s);
-      fprintf (stderr, "%s can't be used as an expression\n",
-               symtbl_ordinal_abbreviation (symtbl_number));
-      break;
-
     case CONSTANT_ASSIGN:
       s = string_table->buffer + id + 1;
       fprintf (stderr, "symbol %s is constant\n", s);
       break;
 
-    case ARR_TYPE_MIS:
-      s = string_table->buffer + id + 1;
-      if (symtbl_number == 0)
-        {
-          fprintf (stderr, "symbol %s isn't defined as an array\n", s);
-        }
-      else
-        {
-          fprintf (stderr, "symbol %s: the ", s);
-          fprintf (stderr, "%s index isn't defined as an array\n",
-                   symtbl_ordinal_abbreviation (symtbl_number));
-        }
-      break;
-
-    case REC_TYPE_MIS:
-      s = string_table->buffer + id + 1;
-      fprintf (stderr, "symbol %s: illegal usage of a field name\n", s);
-      break;
-
-    case FIELD_MIS:
-      s = string_table->buffer + id + 1;
-      fprintf (stderr, "symbol %s: is an undeclared field name\n", s);
-      break;
-
     case VARIABLE_MIS:
       s = string_table->buffer + id + 1;
-      fprintf (stderr, "symbol %s: can't be used as a variable\n", s);
+      fprintf (stderr, "symbol %s can't be used as a variable\n", s);
       break;
 
     case TYPE_MIS:
       s = string_table->buffer + id + 1;
-      fprintf (stderr, "symbol %s: incorrect type usage\n", s);
+      fprintf (stderr, "incorrect type usage for symbol %s\n", s);
       break;
 
     case MULTI_MAIN:
