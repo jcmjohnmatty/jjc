@@ -72,13 +72,6 @@ semantic_error (int type,
       fprintf (stderr, "symbol %s is not a function\n", s);
       break;
 
-    case VAR_VAL:
-      s = string_table->buffer + id + 1;
-      fprintf (stderr, "function %s: reference/value type of ", s);
-      fprintf (stderr, "argument %s differ from previous declaration\n",
-               symtbl_ordinal_abbreviation (symtbl_number));
-      break;
-
     case CONSTANT_VAR:
       s = string_table->buffer + id + 1;
       fprintf (stderr, "function %s: ", s);
